@@ -1,0 +1,69 @@
+[project]
+name = "antgent"
+version = "0.1.0"
+description = ""
+authors = [{email="2t.antoine@gmail.com", name="ant31"}]
+readme = "README.md"
+packages = [{ include = "antgent" }]
+include = []
+requires-python = ">=3.11,<4"
+dependencies = [
+             "asyncio (>=3)",
+             "pydantic",
+             "click",
+             "pyyaml",
+             "sentry-sdk[fastapi]",
+             "temporalloop",
+             "typing-extensions",
+             "ant31box",
+             "openai",
+             "aiohttp",
+             "aiohttp-prometheus-exporter",
+             "tiktoken",
+             "google-genai",
+             "openai-agents"
+             ]
+[tool.poetry.dependencies]
+temporalloop = {git = "https://github.com/ant31/temporal-loop", branch="main"}
+ant31box = {git = "https://github.com/ant31/ant31box", extras=[], branch="main"}
+openai-agents = {git = "https://github.com/openai/openai-agents-python.git", branch="main"}
+
+[tool.poetry.group.dev.dependencies]
+aioresponses = "*"
+pyreadline = "*"
+pylint-pydantic = "*"
+requests = "*"
+black = "*"
+pylint = "*"
+# pyre-check = "*"
+types-requests = "*"
+isort = "*"
+pytest = "*"
+coverage = "*"
+pytest-cov = "*"
+pytest-ordering = "*"
+pytest-asyncio = "*"
+pyright = "*"
+pytest-aioresponses = "*"
+
+ruff = "*"
+sqlacodegen = "3.0.0rc5"
+ipython = "^8.0.0"
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+atomic = true
+profile = "black"
+line_length = 120
+skip_gitignore = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest]
+testpaths = "tests/"
