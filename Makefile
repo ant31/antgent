@@ -35,13 +35,15 @@ clean-build:
 	find . -not -path ".venv/*" -not -path ".cache/*" -prune -name '*.egg' -exec rm -f {} +
 
 clean-pyc:
-	find . -not -path ".venv/*" -not -path ".cache/*" -prune -name '*.pyc' -exec rm -f {} +
-	find . -not -path ".venv/*" -not -path ".cache/*" -prune -name '*.pyo' -exec rm -f {} +
-	find . -not -path ".venv/*" -not -path ".cache/*" -prune -name '*~' -exec rm -f {} +
-	find . -not -path ".venv/*" -not -path ".cache/*" -prune -name 'flycheck_*' -exec rm -f {} +
-	find . -not -path ".venv/*" -not -path ".cache/*" -prune -name '__pycache__' -exec rm -fr {} +
-	find . -not -path ".venv/*" -not -path ".cache/*" -prune -name '.mypy_cache' -exec rm -fr {} +
-	find . -not -path ".venv/*" -not -path ".cache/*" -prune -name '.pyre' -exec rm -fr {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name '*.egg-info' -exec rm -rf {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name '*.egg' -exec rm -f {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name '*.pyc' -exec rm -f {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name '*.pyo' -exec rm -f {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name '*~' -exec rm -f {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name 'flycheck_*' -exec rm -f {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name '__pycache__' -exec rm -rf {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name '.mypy_cache' -exec rm -rf {} +
+	find . -type d \( -path './.venv' -o -path './.cache' \) -prune -o -name '.pyre' -exec rm -rf {} +
 
 clean-test:
 	rm -fr .tox/
