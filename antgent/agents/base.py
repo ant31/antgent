@@ -20,6 +20,7 @@ from agents.model_settings import ModelSettings
 
 # from agents.guardrails import Guardrail
 from agents.tool import MaybeAwaitable, Tool
+from google.genai import types
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from antgent.clients import openai_aclient
@@ -117,7 +118,7 @@ class AgentModel[TContext](BaseModel):
 
 
 class PrepareRun[TContext](BaseModel):
-    input: str | list[TResponseInputItem] = Field(default="")
+    input: str | list[TResponseInputItem] | list[types.Content] = Field(default="")
     context: TContext | None = Field(default=None)
     short_cut: bool = Field(default=False)
 
