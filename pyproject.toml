@@ -13,9 +13,9 @@ dependencies = [
              "click",
              "pyyaml",
              "sentry-sdk[fastapi]",
-             "temporalloop",
+             "temporalloop @ git+https://github.com/ant31/temporal-loop",
              "typing-extensions",
-             "ant31box",
+             "ant31box @ git+https://github.com/ant31/ant31box",
              "openai",
              "aiohttp",
              "aiohttp-prometheus-exporter",
@@ -23,10 +23,6 @@ dependencies = [
              "google-genai",
              "openai-agents"
              ]
-[tool.poetry.dependencies]
-temporalloop = {git = "https://github.com/ant31/temporal-loop", branch="main"}
-ant31box = {git = "https://github.com/ant31/ant31box", extras=[], branch="main"}
-openai-agents = {git = "https://github.com/openai/openai-agents-python.git", branch="main"}
 
 [tool.poetry.group.dev.dependencies]
 aioresponses = "*"
