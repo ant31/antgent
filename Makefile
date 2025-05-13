@@ -68,8 +68,12 @@ pylint-quick:
 
 pylint:
 	poetry run pylint --rcfile=".pylintrc" $(package)
+pyright:
+	poetry run pyright
 
-check: format-test isort-check ruff poetry-check
+lint: format-test isort-check ruff poetry-check
+small-check: format-test isort-check poetry-check
+check: lint pyright
 
 pyre: pyre-check
 
@@ -132,8 +136,18 @@ ipython:
 temporal-schedule:
 	poetry run bin/antgent scheduler --namespace default  --host 127.0.0.1:7233  --config=localconfig.yaml -s scheduly.yaml
 
-docker-push: docker-build
-	docker push  ghcr.io/ant31/antgent:latest
+CONTAINER_REGISTRY=ghcr.io/ant31/$(package)
 
-docker-build:
-	docker build --network=host -t ghcr.io/ant31/antgent:latest .
+
+docker-push-local: docker-build-locall
+    docker push $(CONTAINER_REGISTRY):latest
+
+docker-build-local:
+    docker build --network=host -t $(CONTAINER_REGISTRY):latest .
+
+docker-push:
+	docker buildx build --push -t $(CONTAINER_REGISTRY):latest .
+
+BUMP ?= patch
+bump:
+	poetry run bump-my-version bump $(BUMP)

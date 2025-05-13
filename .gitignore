@@ -15,6 +15,7 @@ report.xml
 localconfig.yaml
 pyrightconfig.json
 __pycache__/
+__localdev__*/
 *.py[cod]
 *$py.class
 *.mypy_cache

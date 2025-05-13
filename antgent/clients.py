@@ -1,72 +1,67 @@
 from functools import cache
 
-from agents import set_tracing_export_api_key
 from google import genai
 from openai import AsyncOpenAI, OpenAI
 
 from antgent.config import config
+from antgent.models.agent import LLMsConfigSchema
 
 
 @cache
-def openai_client(project_name: str = "") -> OpenAI:
+def openai_client(project_name: str = "openai", llms: LLMsConfigSchema | None = None) -> OpenAI:
     """Create a OpenAI instance with the given api_key
     It cache the answer for the same api_key
     use openai.cache_clear() to clear the cache
     """
-    if not project_name:
-        project = config().openai.projects[0]
-    else:
-        project = getattr(config().openai.projects, project_name)
-    openaiconf = config().openai
-    api_key = project.api_key
-    organization = openaiconf.organization_id
-    base_url = openaiconf.url
+    if llms is None:
+        llms = config().llms
+
+    project = llms.get_project(project_name)
+    if project is None:
+        # use default with ENV
+        return OpenAI()
+
     return OpenAI(
-        api_key=api_key,
-        organization=organization,
+        api_key=project.api_key,
+        organization=project.organization_id,
         project=project.project_id,
-        base_url=base_url,
+        base_url=project.url,
     )
 
 
 @cache
-def openai_aclient(project_name: str = "") -> AsyncOpenAI:
+def openai_aclient(project_name: str = "openai", llms: LLMsConfigSchema | None = None) -> AsyncOpenAI:
     """Create a OpenAI instance with the given api_key
     It cache the answer for the same api_key
     use openai.cache_clear() to clear the cache
     """
-    if not project_name:
-        project = config().openai.projects[0]
-    else:
-        project = config().openai.get_project(project_name)
-        if project is None:
-            raise ValueError(f"Project {project_name} not found")
-    openai = config().openai.get_project("openai")
+    if llms is None:
+        llms = config().llms
 
-    if openai is not None:
-        print("set_Tracing")
-        set_tracing_export_api_key(openai.api_key)
-    openaiconf = config().openai
-    api_key = project.api_key
-    organization = openaiconf.organization_id
-    base_url = project.url
+    project = llms.get_project(project_name)
+    if project is None:
+        # use default with ENV
+        return AsyncOpenAI()
 
     return AsyncOpenAI(
-        api_key=api_key,
-        organization=organization,
+        api_key=project.api_key,
+        organization=project.organization_id,
         project=project.project_id,
-        base_url=base_url,
+        base_url=project.url,
     )
 
 
 @cache
-def genai_client(project_name: str = "gemini") -> genai.Client:
+def genai_client(project_name: str = "gemini", llms: LLMsConfigSchema | None = None) -> genai.Client:
     """Create a GenAI instance with the given api_key
     It cache the answer for the same api_key
     use genai.cache_clear() to clear the cache
     """
-    project = config().openai.get_project(project_name)
+    if llms is None:
+        llms = config().llms
+
+    project = llms.get_project(project_name)
     if project is None:
-        raise ValueError(f"Project {project_name} not found")
+        return genai.Client()
     api_key = project.api_key
     return genai.Client(api_key=api_key)

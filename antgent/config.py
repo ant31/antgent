@@ -1,13 +1,15 @@
 # pylint: disable=no-self-argument
 import logging
-import logging.config
 from typing import Any
 
 import ant31box.config
 from ant31box.config import BaseConfig, FastAPIConfigSchema, GConfig, LoggingConfigSchema
-from pydantic import Field
+from pydantic import ConfigDict, Field, RootModel
 from pydantic_settings import SettingsConfigDict
 from temporalloop.config_loader import TemporalConfigSchema, TemporalScheduleSchema, WorkerConfigSchema
+
+from antgent.models.agent import AgentConfig, AgentsConfigSchema, LLMsConfigSchema
+from antgent.utils.aliases import AliasResolver
 
 LOGGING_CONFIG: dict[str, Any] = ant31box.config.LOGGING_CONFIG
 LOGGING_CONFIG["loggers"].update({"antgent": {"handlers": ["default"], "level": "INFO", "propagate": True}})
@@ -15,46 +17,60 @@ LOGGING_CONFIG["loggers"].update({"antgent": {"handlers": ["default"], "level": 
 logger: logging.Logger = logging.getLogger("antgent")
 
 
+class AliasesSchema(RootModel):
+    """Schema for managing model aliases."""
+
+    model_config = ConfigDict(validate_assignment=True)
+    root: AliasResolver = Field(default_factory=AliasResolver)
+
+    def resolve(self, alias_name: str) -> str:
+        return self.root.resolve(alias_name)
+
+    def __setitem__(self, alias: str, value: str):
+        self.root.__setitem__(alias, value)
+
+    def __getitem__(self, alias: str) -> str:
+        return self.root.__getitem__(alias)
+
+    def __delitem__(self, alias: str):
+        self.root.__delitem__(alias)
+
+    def __contains__(self, alias: str) -> bool:
+        return self.root.__contains__(alias)
+
+    def __len__(self):
+        return self.root.__len__()
+
+    def items(self):
+        return self.root.items()
+
+    def values(self):
+        return self.root.values()
+
+
+class LogfireConfigSchema(BaseConfig):
+    token: str | None = Field(default=None)
+    send_to_logfire: bool = Field(default=True)
+    service_name: str = Field(default="")
+
+
+class LangfuseConfigSchema(BaseConfig):
+    public_key: str = Field(default="pk-lf-989f33ac-ad6d-418f-b115-590d7c8b1c95")
+    secret_key: str = Field(default="sk-lf-154576f9-d2d2-48c6-84a1-122f03c0a777")
+    endpoint: str = Field(default="https://cloud.langfuse.com")
+
+
 class LoggingCustomConfigSchema(LoggingConfigSchema):
     log_config: dict[str, Any] | str | None = Field(default_factory=lambda: LOGGING_CONFIG)
 
 
+class LiteLLMConfigSchema(BaseConfig):
+    base_url: str = Field(default="https://litellm.conny.dev")
+    token: str = Field(default="sk-ukiiHpNuHgI2ZqupmPUA4")
+
+
 class FastAPIConfigCustomSchema(FastAPIConfigSchema):
     server: str = Field(default="antgent.server.server:serve")
-
-
-class OpenAIProjectKeySchema(BaseConfig):
-    api_key: str = Field(default="antgent-openaiKEY")
-    project_id: str = Field(default="proj-1xZoR")
-    name: str = Field(default="default")
-    url: str | None = Field(default=None)
-
-
-class OpenAIConfigSchema(BaseConfig):
-    organization: str = Field(default="Ant31")
-    organization_id: str = Field(default="org-1xZoRaUM")
-    url: str | None = Field(default=None)
-    projects: list[OpenAIProjectKeySchema] = Field(
-        default=[
-            OpenAIProjectKeySchema(
-                api_key="antgent-openaiKEY",
-                project_id="proj_OIMUS8HgaQZ",
-                name="openai",
-            ),
-            OpenAIProjectKeySchema(
-                api_key="antgent-openaiKEY",
-                project_id="proj_NrZHbXS1CDXh",
-                name="gemini",
-                url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            ),
-        ]
-    )
-
-    def get_project(self, name: str) -> OpenAIProjectKeySchema | None:
-        for project in self.projects:
-            if project.name.lower() == name.lower():
-                return project
-        return None
 
 
 class TemporalCustomConfigSchema(TemporalConfigSchema):
@@ -96,11 +112,14 @@ class ConfigSchema(ant31box.config.ConfigSchema):
         extra="allow",
     )
     name: str = Field(default="antgent")
-    openai: OpenAIConfigSchema = Field(default_factory=OpenAIConfigSchema)
+    aliases: AliasesSchema = Field(default_factory=AliasesSchema)
+    llms: LLMsConfigSchema = Field(default_factory=LLMsConfigSchema)
     logging: LoggingConfigSchema = Field(default_factory=LoggingCustomConfigSchema, exclude=True)
-    server: FastAPIConfigSchema = Field(default_factory=FastAPIConfigCustomSchema)
     temporalio: TemporalCustomConfigSchema = Field(default_factory=TemporalCustomConfigSchema, exclude=True)
     schedules: dict[str, TemporalScheduleSchema] = Field(default_factory=dict, exclude=True)
+    logfire: LogfireConfigSchema = Field(default_factory=LogfireConfigSchema)
+    langfuse: LangfuseConfigSchema = Field(default_factory=LangfuseConfigSchema)
+    agents: AgentsConfigSchema = Field(default_factory=AgentsConfigSchema)
 
 
 class Config(ant31box.config.Config[ConfigSchema]):
@@ -108,8 +127,8 @@ class Config(ant31box.config.Config[ConfigSchema]):
     __config_class__: type[ConfigSchema] = ConfigSchema
 
     @property
-    def openai(self) -> OpenAIConfigSchema:
-        return self.conf.openai
+    def llms(self) -> LLMsConfigSchema:
+        return self.conf.llms
 
     @property
     def temporalio(self) -> TemporalCustomConfigSchema:
@@ -118,6 +137,30 @@ class Config(ant31box.config.Config[ConfigSchema]):
     @property
     def schedules(self) -> dict[str, TemporalScheduleSchema]:
         return self.conf.schedules
+
+    @property
+    def logfire(self) -> LogfireConfigSchema:
+        return self.conf.logfire
+
+    @property
+    def langfuse(self) -> LangfuseConfigSchema:
+        return self.conf.langfuse
+
+    @property
+    def aliases(self) -> AliasResolver:
+        return self.conf.aliases.root
+
+    @property
+    def agents(self) -> dict[str, AgentConfig]:
+        return self.conf.agents.root
+
+    @property
+    def agents_schema(self) -> AgentsConfigSchema:
+        return self.conf.agents
+
+    @property
+    def aliases_schema(self) -> AliasesSchema:
+        return self.conf.aliases
 
 
 def config(path: str | None = None, reload: bool = False) -> Config:
