@@ -1,3 +1,10 @@
+aliases:
+  gemini/gemini-2.5-pro: gemini/gemini-2.5-pro-preview-05-06
+  gemini/gemini-2.5-flash: gemini/gemini-2.5-flash-preview-04-17
+  weak: gemini/gemini-2.5-flash
+  strong: gemini/gemini-2.5-pro
+  reasoning: gemini/gemini-2.5-pro
+
 app:
   env: dev
   prometheus_dir: /tmp/prometheus

@@ -1,27 +1,30 @@
 [project]
 name = "antgent"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = [{email="2t.antoine@gmail.com", name="ant31"}]
 readme = "README.md"
 packages = [{ include = "antgent" }]
 include = []
-requires-python = ">=3.11,<4"
+requires-python = ">=3.12,<4"
 dependencies = [
              "asyncio (>=3)",
              "pydantic",
              "click",
              "pyyaml",
              "sentry-sdk[fastapi]",
-             "temporalloop @ git+https://github.com/ant31/temporal-loop",
+             "temporalloop @ git+https://github.com/ant31/temporal-loop@main",
              "typing-extensions",
-             "ant31box @ git+https://github.com/ant31/ant31box",
+             "ant31box",
              "openai",
              "aiohttp",
              "aiohttp-prometheus-exporter",
              "tiktoken",
              "google-genai",
-             "openai-agents"
+             "openai-agents",
+             "litellm",
+             "pydantic-ai[logfire]",
+             "nest-asyncio",
              ]
 
 [tool.poetry.group.dev.dependencies]
@@ -45,6 +48,7 @@ pytest-aioresponses = "*"
 ruff = "*"
 sqlacodegen = "3.0.0rc5"
 ipython = "^8.0.0"
+bump-my-version = "^1.1.2"
 
 [tool.black]
 line-length = 120
@@ -63,3 +67,27 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest]
 testpaths = "tests/"
+
+
+[tool.bumpversion]
+current_version = "0.2.0"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
+search = "{current_version}"
+replace = "{new_version}"
+regex = false
+ignore_missing_version = false
+tag = true
+sign_tags = false
+tag_name = "v{new_version}"
+tag_message = "Bump version: {current_version} → {new_version}"
+allow_dirty = true
+commit = false
+message = "Bump version: {current_version} → {new_version}"
+commit_args = ""
+
+[[tool.bumpversion.files]]
+filename = 'antgent/__init__.py'
+search = "__version__ = \"{current_version}\""
+replace = "__version__ = \"{new_version}\""
+regex = true
