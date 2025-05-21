@@ -1,9 +1,9 @@
 # pylint: disable=no-self-argument
 import logging
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 import ant31box.config
-from ant31box.config import BaseConfig, FastAPIConfigSchema, GConfig, LoggingConfigSchema
+from ant31box.config import BaseConfig, FastAPIConfigSchema, GConfig, GenericConfig, LoggingConfigSchema
 from pydantic import ConfigDict, Field, RootModel
 from pydantic_settings import SettingsConfigDict
 from temporalloop.config_loader import TemporalConfigSchema, TemporalScheduleSchema, WorkerConfigSchema
@@ -105,6 +105,8 @@ ENVPREFIX = "ANTGENT"
 
 # Main configuration schema
 class ConfigSchema(ant31box.config.ConfigSchema):
+    _env_prefix = ENVPREFIX
+
     model_config = SettingsConfigDict(
         env_prefix=f"{ENVPREFIX}_",
         env_nested_delimiter="__",
@@ -122,9 +124,11 @@ class ConfigSchema(ant31box.config.ConfigSchema):
     agents: AgentsConfigSchema = Field(default_factory=AgentsConfigSchema)
 
 
-class Config(ant31box.config.Config[ConfigSchema]):
-    _env_prefix = ENVPREFIX
-    __config_class__: type[ConfigSchema] = ConfigSchema
+TConfigSchema = TypeVar("TConfigSchema", bound=ConfigSchema)  # pylint: disable= invalid-name
+
+
+class BaseConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
+    __config_class__: type[TConfigSchema]
 
     @property
     def llms(self) -> LLMsConfigSchema:
@@ -161,6 +165,10 @@ class Config(ant31box.config.Config[ConfigSchema]):
     @property
     def aliases_schema(self) -> AliasesSchema:
         return self.conf.aliases
+
+
+class Config(BaseConfig[ConfigSchema]):
+    __config_class__: type[ConfigSchema] = ConfigSchema
 
 
 def config(path: str | None = None, reload: bool = False) -> Config:
