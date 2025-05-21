@@ -1,12 +1,14 @@
 import logging
 from abc import abstractmethod
-from typing import cast
+from collections.abc import Awaitable, Callable
+from typing import TypeVar, cast
 
 from agents import (
     Agent,
     Model,
     OpenAIChatCompletionsModel,
     OpenAIResponsesModel,
+    RunContextWrapper,
     Runner,
     RunResult,
     TResponseInputItem,
@@ -20,6 +22,9 @@ from antgent.models.agent import AgentConfig, AgentRunMetadata, LLMsConfigSchema
 from antgent.utils.aliases import Aliases, AliasResolver
 
 logger = logging.getLogger(__name__)
+T = TypeVar("T")
+
+MaybeAwaitable = Awaitable[T] | T
 
 
 class ContextTooLargeError(ValueError): ...
@@ -54,7 +59,12 @@ class BaseAgent[TContext, TOutput]:
         return conf
 
     @abstractmethod
-    def prompt(self) -> str: ...
+    def prompt(self) -> str | Callable[[RunContextWrapper[TContext], Agent[TContext]], MaybeAwaitable[str]] | None:
+        """
+        Returns the prompt for the agent. This can be a static string or a callable that takes the context and
+        agent as arguments and returns a string or an awaitable string.
+        """
+        pass
 
     @property
     def model(self):
@@ -63,18 +73,13 @@ class BaseAgent[TContext, TOutput]:
         return self.conf.model
 
     @classmethod
-    def set_resolver(cls, resolver: AliasResolver) -> None:
+    def set_alias_resolver(cls, resolver: AliasResolver) -> None:
         cls.alias_resolver = resolver
-
-    # @classmethod
-    # def set_clients_conf(cls, conf: LLMsConfigSchema) -> None:
-    #     cls.llms_conf = conf
 
     def get_sdk_model(self) -> Model:
         if self.conf.client in {"litellm", "litellm_proxy"}:
             return LitellmModel(model=self.model, api_key=self.conf.api_key, base_url=self.conf.base_url)
         if self.conf.api_mode == "response":
-            # Only OpenAI uses Reponse API
             return OpenAIResponsesModel(
                 model=self.model, openai_client=openai_aclient(self.conf.client, llms=self.llms_conf)
             )
