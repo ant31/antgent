@@ -4,7 +4,6 @@ import os
 from typing import Literal
 
 import logfire
-import nest_asyncio
 from agents import set_trace_processors, set_tracing_export_api_key
 
 from antgent.config import ConfigSchema, LangfuseConfigSchema, LogfireConfigSchema
@@ -78,7 +77,6 @@ def init_logfire(config: LogfireConfigSchema, mode: Literal["server", "worker"] 
 
 
 def init(config: ConfigSchema, env: str = "dev", mode: Literal["server", "worker"] = "server", extra=None):
-    nest_asyncio.apply()
     if not extra:
         extra = {}
     extra["env"] = env

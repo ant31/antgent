@@ -24,7 +24,6 @@ dependencies = [
              "openai-agents",
              "litellm",
              "pydantic-ai[logfire]",
-             "nest-asyncio",
              ]
 
 [tool.poetry.group.dev.dependencies]
