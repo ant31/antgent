@@ -64,6 +64,12 @@ class LoggingCustomConfigSchema(LoggingConfigSchema):
     log_config: dict[str, Any] | str | None = Field(default_factory=lambda: LOGGING_CONFIG)
 
 
+class TracesConfigSchema(BaseConfig):
+    enabled: bool = Field(default=True)
+    logfire: LogfireConfigSchema = Field(default_factory=LogfireConfigSchema)
+    langfuse: LangfuseConfigSchema = Field(default_factory=LangfuseConfigSchema)
+
+
 class LiteLLMConfigSchema(BaseConfig):
     base_url: str = Field(default="https://litellm.conny.dev")
     token: str = Field(default="sk-ukiiHpNuHgI2ZqupmPUA4")
@@ -119,16 +125,17 @@ class ConfigSchema(ant31box.config.ConfigSchema):
     logging: LoggingConfigSchema = Field(default_factory=LoggingCustomConfigSchema, exclude=True)
     temporalio: TemporalCustomConfigSchema = Field(default_factory=TemporalCustomConfigSchema, exclude=True)
     schedules: dict[str, TemporalScheduleSchema] = Field(default_factory=dict, exclude=True)
-    logfire: LogfireConfigSchema = Field(default_factory=LogfireConfigSchema)
-    langfuse: LangfuseConfigSchema = Field(default_factory=LangfuseConfigSchema)
+
     agents: AgentsConfigSchema = Field(default_factory=AgentsConfigSchema)
+    traces: TracesConfigSchema = Field(default_factory=TracesConfigSchema, exclude=True)
 
 
 TConfigSchema = TypeVar("TConfigSchema", bound=ConfigSchema)  # pylint: disable= invalid-name
 
 
-class BaseConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
+class AntgentConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
     __config_class__: type[TConfigSchema]
+    _env_prefix = ENVPREFIX
 
     @property
     def llms(self) -> LLMsConfigSchema:
@@ -167,7 +174,7 @@ class BaseConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
         return self.conf.aliases
 
 
-class Config(BaseConfig[ConfigSchema]):
+class Config(AntgentConfig[ConfigSchema]):
     __config_class__: type[ConfigSchema] = ConfigSchema
 
 

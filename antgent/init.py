@@ -7,16 +7,16 @@ import logfire
 import nest_asyncio
 from agents import set_trace_processors, set_tracing_export_api_key
 
-from antgent.config import ConfigSchema, LogfireConfigSchema
+from antgent.config import ConfigSchema, LangfuseConfigSchema, LogfireConfigSchema
 from antgent.models.agent import LLMConfigSchema
 from antgent.utils.aliases import Aliases
 
 
-def init_envs_langfuse(config: ConfigSchema):
+def init_envs_langfuse(config: LangfuseConfigSchema):
     # Replace with your Langfuse keys.
-    os.environ["LANGFUSE_PUBLIC_KEY"] = os.environ.get("LANGFUSE_PUBLIC_KEY", config.langfuse.public_key)
-    os.environ["LANGFUSE_SECRET_KEY"] = os.environ.get("LANGFUSE_SECRET_KEY", config.langfuse.secret_key)
-    os.environ["LANGFUSE_HOST"] = os.environ.get("LANGFUSE_HOST", config.langfuse.endpoint)
+    os.environ["LANGFUSE_PUBLIC_KEY"] = os.environ.get("LANGFUSE_PUBLIC_KEY", config.public_key)
+    os.environ["LANGFUSE_SECRET_KEY"] = os.environ.get("LANGFUSE_SECRET_KEY", config.secret_key)
+    os.environ["LANGFUSE_HOST"] = os.environ.get("LANGFUSE_HOST", config.endpoint)
 
     # Build Basic Auth header.
     LANGFUSE_AUTH = base64.b64encode(
@@ -56,7 +56,6 @@ def init_envs(config: ConfigSchema):
     """
     Initialize environment variables
     """
-    init_envs_langfuse(config)
     init_envs_llm(config)
 
 
@@ -68,6 +67,7 @@ def init_logfire(config: LogfireConfigSchema, mode: Literal["server", "worker"] 
     set_trace_processors([])
     if not extra:
         extra = {}
+
     logfire.configure(token=config.token, environment=extra.get("env", "dev"), send_to_logfire="if-token-present")
     logfire.instrument_openai_agents()
     if mode == "server" and extra is not None and extra.get("app", None):
@@ -83,5 +83,7 @@ def init(config: ConfigSchema, env: str = "dev", mode: Literal["server", "worker
         extra = {}
     extra["env"] = env
     init_envs(config)
-    init_logfire(config.logfire, mode, extra)
+    if config.traces.enabled:
+        init_logfire(config.traces.logfire, mode, extra)
+        init_envs_langfuse(config.traces.langfuse)
     init_aliases(config)
