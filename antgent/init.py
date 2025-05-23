@@ -86,4 +86,6 @@ def init(config: ConfigSchema, env: str = "dev", mode: Literal["server", "worker
     if config.traces.enabled:
         init_logfire(config.traces.logfire, mode, extra)
         init_envs_langfuse(config.traces.langfuse)
+    else:
+        set_trace_processors([])
     init_aliases(config)
