@@ -127,7 +127,7 @@ class ConfigSchema(ant31box.config.ConfigSchema):
     schedules: dict[str, TemporalScheduleSchema] = Field(default_factory=dict, exclude=True)
 
     agents: AgentsConfigSchema = Field(default_factory=AgentsConfigSchema)
-    traces: TracesConfigSchema = Field(default_factory=TracesConfigSchema, exclude=True)
+    traces: TracesConfigSchema = Field(default_factory=TracesConfigSchema)
 
 
 TConfigSchema = TypeVar("TConfigSchema", bound=ConfigSchema)  # pylint: disable= invalid-name
