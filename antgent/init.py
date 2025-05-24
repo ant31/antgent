@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 import base64
+import logging
 import os
 from typing import Literal
 
+import litellm
 import logfire
 from agents import set_trace_processors, set_tracing_export_api_key
 
 from antgent.config import ConfigSchema, LangfuseConfigSchema, LogfireConfigSchema
 from antgent.models.agent import LLMConfigSchema
 from antgent.utils.aliases import Aliases
+
+logger = logging.getLogger(__name__)
 
 
 def init_envs_langfuse(config: LangfuseConfigSchema):
@@ -35,6 +39,7 @@ def set_env_llm(config: LLMConfigSchema | None, prefix: str | None):
     up = prefix.upper()
     os.environ[f"{up}_API_KEY"] = os.environ.get(f"{up}_API_KEY", config.api_key)
     url = os.environ.get(f"{up}_API_BASE", config.url)
+    logger.info(f"Setting {up}_API_BASE to {url}")
     if url:
         os.environ[f"{up}_API_BASE"] = url
 
@@ -45,7 +50,9 @@ def init_envs_llm(config: ConfigSchema):
     set_env_llm(config.llms.openai, "OPENAI")
     set_env_llm(config.llms.gemini, "GEMINI")
     if config.llms.litellm_proxy and config.llms.litellm:
-        os.environ["LITELLM_USE_PROXY"] = os.environ.get("LITELLM_USE_PROXY", "True")
+        logger.info("Using litellm proxy")
+        litellm.use_litellm_proxy = True
+        os.environ["USE_LITELLM_PROXY"] = os.environ.get("USE_LITELLM_PROXY", "True")
     for _, conf in config.llms.llms.items():
         set_env_llm(config=conf, prefix=conf.name)
     set_tracing_export_api_key("")
