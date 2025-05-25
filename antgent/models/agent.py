@@ -15,6 +15,7 @@ type TLLMInput = str | list[TResponseInputItem]
 
 
 class ModelInfo(BaseModel):
+    model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
     model: str = Field(default="openai/gpt-4o")
     client: Literal["openai", "gemini", "litellm"] = Field(default="openai")
     api_mode: Literal["chat", "response"] = Field(default="chat")

@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 def init_envs_langfuse(config: LangfuseConfigSchema):
     # Replace with your Langfuse keys.
+    logger.info("Setting up Langfuse environment variables: pk:%s", config.public_key)
     os.environ["LANGFUSE_PUBLIC_KEY"] = os.environ.get("LANGFUSE_PUBLIC_KEY", config.public_key)
     os.environ["LANGFUSE_SECRET_KEY"] = os.environ.get("LANGFUSE_SECRET_KEY", config.secret_key)
     os.environ["LANGFUSE_HOST"] = os.environ.get("LANGFUSE_HOST", config.endpoint)
@@ -66,6 +67,7 @@ def init_envs(config: ConfigSchema):
 
 
 def init_aliases(config: ConfigSchema):
+    logger.info("Setting up aliases")
     Aliases.add_aliases(config.aliases.root)
 
 
@@ -89,8 +91,8 @@ def init(config: ConfigSchema, env: str = "dev", mode: Literal["server", "worker
     extra["env"] = env
     init_envs(config)
     if config.traces.enabled:
-        init_logfire(config.traces.logfire, mode, extra)
         init_envs_langfuse(config.traces.langfuse)
+        init_logfire(config.traces.logfire, mode, extra)
     else:
         set_trace_processors([])
     init_aliases(config)

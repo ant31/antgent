@@ -21,7 +21,7 @@ dependencies = [
              "aiohttp-prometheus-exporter",
              "tiktoken",
              "google-genai",
-             "openai-agents",
+             "openai-agents<0.0.16",
              "litellm",
              "pydantic-ai[logfire]",
              ]

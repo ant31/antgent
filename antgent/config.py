@@ -50,7 +50,7 @@ class AliasesSchema(RootModel):
 
 class LogfireConfigSchema(BaseConfig):
     token: str | None = Field(default=None)
-    send_to_logfire: bool = Field(default=True)
+    send_to_logfire: bool | str = Field(default="if-token-present")
     service_name: str = Field(default="")
 
 
@@ -150,12 +150,8 @@ class AntgentConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
         return self.conf.schedules
 
     @property
-    def logfire(self) -> LogfireConfigSchema:
-        return self.conf.logfire
-
-    @property
-    def langfuse(self) -> LangfuseConfigSchema:
-        return self.conf.langfuse
+    def traces(self) -> TracesConfigSchema:
+        return self.conf.traces
 
     @property
     def aliases(self) -> AliasResolver:
@@ -172,6 +168,10 @@ class AntgentConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
     @property
     def aliases_schema(self) -> AliasesSchema:
         return self.conf.aliases
+
+    @property
+    def logging(self) -> LoggingConfigSchema:
+        return self.conf.logging
 
 
 class Config(AntgentConfig[ConfigSchema]):
