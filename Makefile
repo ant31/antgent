@@ -138,7 +138,6 @@ temporal-schedule:
 
 CONTAINER_REGISTRY=ghcr.io/ant31/$(package)
 
-
 docker-push-local: docker-build-locall
     docker push $(CONTAINER_REGISTRY):latest
 

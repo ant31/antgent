@@ -72,11 +72,10 @@ def init_aliases(config: ConfigSchema):
 
 
 def init_logfire(config: LogfireConfigSchema, mode: Literal["server", "worker"] = "server", extra=None):
-    set_trace_processors([])
     if not extra:
         extra = {}
 
-    logfire.configure(token=config.token, environment=extra.get("env", "dev"), send_to_logfire="if-token-present")
+    logfire.configure(token=config.token, environment=extra.get("env", "dev"), send_to_logfire=config.send_to_logfire)
     logfire.instrument_openai_agents()
     if mode == "server" and extra is not None and extra.get("app", None):
         app = extra["app"]
@@ -89,10 +88,9 @@ def init(config: ConfigSchema, env: str = "dev", mode: Literal["server", "worker
     if not extra:
         extra = {}
     extra["env"] = env
+    init_aliases(config)
     init_envs(config)
+    set_trace_processors([])
     if config.traces.enabled:
         init_envs_langfuse(config.traces.langfuse)
         init_logfire(config.traces.logfire, mode, extra)
-    else:
-        set_trace_processors([])
-    init_aliases(config)

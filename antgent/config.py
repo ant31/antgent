@@ -1,9 +1,16 @@
 # pylint: disable=no-self-argument
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 import ant31box.config
-from ant31box.config import BaseConfig, FastAPIConfigSchema, GConfig, GenericConfig, LoggingConfigSchema
+from ant31box.config import (
+    AppConfigSchema,
+    BaseConfig,
+    FastAPIConfigSchema,
+    GConfig,
+    GenericConfig,
+    LoggingConfigSchema,
+)
 from pydantic import ConfigDict, Field, RootModel
 from pydantic_settings import SettingsConfigDict
 from temporalloop.config_loader import TemporalConfigSchema, TemporalScheduleSchema, WorkerConfigSchema
@@ -50,7 +57,7 @@ class AliasesSchema(RootModel):
 
 class LogfireConfigSchema(BaseConfig):
     token: str | None = Field(default=None)
-    send_to_logfire: bool | str = Field(default="if-token-present")
+    send_to_logfire: bool | Literal["if-token-present"] = Field(default="if-token-present")
     service_name: str = Field(default="")
 
 
@@ -125,7 +132,7 @@ class ConfigSchema(ant31box.config.ConfigSchema):
     logging: LoggingConfigSchema = Field(default_factory=LoggingCustomConfigSchema, exclude=True)
     temporalio: TemporalCustomConfigSchema = Field(default_factory=TemporalCustomConfigSchema, exclude=True)
     schedules: dict[str, TemporalScheduleSchema] = Field(default_factory=dict, exclude=True)
-
+    app: AppConfigSchema = Field(default_factory=AppConfigSchema)
     agents: AgentsConfigSchema = Field(default_factory=AgentsConfigSchema)
     traces: TracesConfigSchema = Field(default_factory=TracesConfigSchema)
 
@@ -172,6 +179,18 @@ class AntgentConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
     @property
     def logging(self) -> LoggingConfigSchema:
         return self.conf.logging
+
+    @property
+    def server(self) -> FastAPIConfigSchema:
+        return self.conf.server
+
+    @property
+    def app(self) -> AppConfigSchema:
+        return self.conf.app
+
+    @property
+    def name(self) -> str:
+        return self.conf.name
 
 
 class Config(AntgentConfig[ConfigSchema]):
