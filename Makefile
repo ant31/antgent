@@ -1,4 +1,4 @@
-.PHONY: format format-test check fix clean clean-build clean-pyc clean-test coverage install pylint pylint-quick pyre test publish poetry-check publish isort isort-check docker-push docker-build migrate
+.PHONY: format format-test check fix clean clean-build clean-pyc clean-test coverage install pylint pylint-quick pyre test publish uv-check publish isort isort-check docker-push docker-build migrate
 
 APP_ENV ?= dev
 VERSION := `cat VERSION`
@@ -52,67 +52,65 @@ clean-test:
 	rm -f coverage.xml
 	rm -f report.xml
 test:
-	ANTGENT_CONFIG=tests/data/test_config.yaml poetry run py.test --cov=$(package) --verbose tests --cov-report=html --cov-report=term --cov-report xml:coverage.xml --cov-report=term-missing --junitxml=report.xml --asyncio-mode=auto
+	ANTGENT_CONFIG=tests/data/test_config.yaml uv run py.test --cov=$(package) --verbose tests --cov-report=html --cov-report=term --cov-report xml:coverage.xml --cov-report=term-missing --junitxml=report.xml --asyncio-mode=auto
 
 coverage:
-	poetry run coverage run --source $(package) setup.py test
-	poetry run coverage report -m
-	poetry run coverage html
+	uv run coverage run --source $(package) setup.py test
+	uv run coverage report -m
+	uv run coverage html
 	$(BROWSER) htmlcov/index.html
 
 install: clean
-	poetry install
+	uv install
 
 pylint-quick:
-	poetry run pylint --rcfile=.pylintrc $(package)  -E -r y
+	uv run pylint --rcfile=.pylintrc $(package)  -E -r y
 
 pylint:
-	poetry run pylint --rcfile=".pylintrc" $(package)
+	uv run pylint --rcfile=".pylintrc" $(package)
 pyright:
-	poetry run pyright
+	uv run pyright
 
-lint: format-test isort-check ruff poetry-check
-small-check: format-test isort-check poetry-check
+lint: format-test isort-check ruff uv-check
+small-check: format-test isort-check uv-check
 check: lint pyright
 
 pyre: pyre-check
 
 pyre-check:
-	poetry run pyre --noninteractive check 2>/dev/null
+	uv run pyre --noninteractive check 2>/dev/null
 
 format:
-	poetry run ruff format $(package)
+	uv run ruff format $(package)
 
 format-test:
-	poetry run ruff format $(package) --check
+	uv run ruff format $(package) --check
 
-poetry-check:
-	poetry check --lock
+uv-check:
+	uv lock --locked --offline
 
 publish: clean
-	poetry build
-	poetry publish
+	uv build
+	uv publish
 
 isort:
-	poetry run isort .
-	poetry run ruff check --select I $(package) tests --fix
+	uv run ruff check --select I $(package) tests --fix
 
 isort-check:
-	poetry run ruff check --select I $(package) tests
-	poetry run isort --diff --check .
+	uv run ruff check --select I $(package) tests
 
 ruff:
-	poetry run ruff check
+	uv run ruff check
 
 fix: format isort
-	poetry run ruff check --fix
+	uv run ruff check --fix
 
 .ONESHELL:
 pyrightconfig:
 	jq \
       --null-input \
-      --arg venv "$$(basename $$(poetry env info -p))" \
-      --arg venvPath "$$(dirname $$(poetry env info -p))" \
+      --arg venv "$$(basename $$(uv env info -p))" \
+      --arg venvPath "$$(dirname $$(uv env info -p))" \
       '{ "venv": $$venv, "venvPath": $$venvPath }' \
       > pyrightconfig.json
 
@@ -122,7 +120,7 @@ rename:
 	ack ANTGENT -i -l | xargs -i{} sed -r -i "s/ANTGENT/ANTGENT/g" {}
 
 run-worker:
-	poetry run bin/antgent  looper --namespace default  --host 127.0.0.1:7233 --config=localconfig.yaml
+	uv run bin/antgent  looper --namespace default  --host 127.0.0.1:7233 --config=localconfig.yaml
 
 run-server:
 	./bin/antgent server --config localconfig.yaml
@@ -131,10 +129,10 @@ temporal-init-namespace:
 	temporal operator namespace  create -n antgent-dev-al --retention 72h0m0s --description "antgent stg namespace"
 
 ipython:
-	poetry run ipython
+	uv run ipython
 
 temporal-schedule:
-	poetry run bin/antgent scheduler --namespace default  --host 127.0.0.1:7233  --config=localconfig.yaml -s scheduly.yaml
+	uv run bin/antgent scheduler --namespace default  --host 127.0.0.1:7233  --config=localconfig.yaml -s scheduly.yaml
 
 CONTAINER_REGISTRY=ghcr.io/ant31/$(package)
 
@@ -149,4 +147,8 @@ docker-push:
 
 BUMP ?= patch
 bump:
-	poetry run bump-my-version bump $(BUMP)
+	uv run bump-my-version bump $(BUMP)
+
+upgrade-dep:
+	uv sync --upgrade
+	uv lock -U --resolution=highest

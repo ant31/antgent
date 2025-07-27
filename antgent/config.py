@@ -11,6 +11,7 @@ from ant31box.config import (
     GenericConfig,
     LoggingConfigSchema,
 )
+from ant31box.s3 import S3ConfigSchema
 from pydantic import ConfigDict, Field, RootModel
 from pydantic_settings import SettingsConfigDict
 from temporalloop.config_loader import TemporalConfigSchema, TemporalScheduleSchema, WorkerConfigSchema
@@ -19,7 +20,7 @@ from antgent.models.agent import AgentConfig, AgentsConfigSchema, LLMsConfigSche
 from antgent.utils.aliases import AliasResolver
 
 LOGGING_CONFIG: dict[str, Any] = ant31box.config.LOGGING_CONFIG
-LOGGING_CONFIG["loggers"].update({"antgent": {"handlers": ["default"], "level": "INFO", "propagate": True}})
+LOGGING_CONFIG["loggers"].update({"antgent": {"handlers": ["default"], "level": "INFO", "propagate": False}})
 
 logger: logging.Logger = logging.getLogger("antgent")
 
@@ -135,6 +136,7 @@ class ConfigSchema(ant31box.config.ConfigSchema):
     app: AppConfigSchema = Field(default_factory=AppConfigSchema)
     agents: AgentsConfigSchema = Field(default_factory=AgentsConfigSchema)
     traces: TracesConfigSchema = Field(default_factory=TracesConfigSchema)
+    s3: S3ConfigSchema = Field(default_factory=S3ConfigSchema)
 
 
 TConfigSchema = TypeVar("TConfigSchema", bound=ConfigSchema)  # pylint: disable= invalid-name
@@ -191,6 +193,10 @@ class AntgentConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
     @property
     def name(self) -> str:
         return self.conf.name
+
+    @property
+    def s3(self) -> S3ConfigSchema:
+        return self.conf.s3
 
 
 class Config(AntgentConfig[ConfigSchema]):
