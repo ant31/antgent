@@ -92,7 +92,7 @@ class BaseAgent[TContext, TOutput]:
             name=self.conf.name,
             model=self.get_sdk_model(),
             instructions=self.prompt(),
-            output_type=self.output_cls,
+            output_type=self.conf.structured_cls,
             model_settings=self.conf.model_settings,
         )
 

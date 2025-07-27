@@ -469,7 +469,10 @@ ignore = [
 "FBT002",
 "PLR2004",
 "E501",
+"UP046", # Generic class `AntgentConfig` uses `Generic` subclass instead of type parameter
+"PLC0415",  #`import` should be at the top-level of a file
 "PLR0913" # too many argument in function
+
 ]
 
 fixable = ["ALL"]

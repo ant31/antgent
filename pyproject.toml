@@ -2,52 +2,65 @@
 name = "antgent"
 version = "0.2.1"
 description = ""
-authors = [{email="2t.antoine@gmail.com", name="ant31"}]
-readme = "README.md"
-packages = [{ include = "antgent" }]
-include = []
+authors = [{ name = "ant31", email = "2t.antoine@gmail.com" }]
 requires-python = ">=3.12,<4"
+readme = "README.md"
+include = [
+    { path = "antgent/files" }
+    ]
 dependencies = [
-             "asyncio (>=3)",
-             "pydantic",
-             "click",
-             "pyyaml",
-             "sentry-sdk[fastapi]",
-             "temporalloop @ git+https://github.com/ant31/temporal-loop@main",
-             "typing-extensions",
-             "ant31box",
-             "openai",
-             "aiohttp",
-             "aiohttp-prometheus-exporter",
-             "tiktoken",
-             "google-genai",
-             "openai-agents",
-             "litellm",
-             "pydantic-ai[logfire]",
-             ]
+    "asyncio (>=3)",
+    "pydantic",
+    "click",
+    "pyyaml",
+    "sentry-sdk[fastapi]",
+    "temporalloop >= 0.2.2",
+    "typing-extensions",
+    "ant31box[cli,fastapi,s3]>=0.2.8",
+    "openai",
+    "aiohttp",
+    "aiohttp-prometheus-exporter",
+    "tokenizers <= v0.21.3",
+    "tiktoken",
+    "google-genai",
+    "openai-agents",
+    "litellm",
+    "pydantic-ai[logfire]",
+    "openpyxl>=3.1.5",
+    "python-docx>=1.2.0",
+    "pypdf>=5.8.0",
+    "fpdf2>=2.8.3",
+    "typer>=0.16.0",
+    "pydot>=4.0.1",
+]
+packages = [{ include = "antgent" }]
 
-[tool.poetry.group.dev.dependencies]
-aioresponses = "*"
-pyreadline = "*"
-pylint-pydantic = "*"
-requests = "*"
-black = "*"
-pylint = "*"
-# pyre-check = "*"
-types-requests = "*"
-isort = "*"
-pytest = "*"
-coverage = "*"
-pytest-cov = "*"
-pytest-ordering = "*"
-pytest-asyncio = "*"
-pyright = "*"
-pytest-aioresponses = "*"
+[dependency-groups]
+dev = [
+    "aioresponses",
+    "pyreadline",
+    "pylint-pydantic",
+    "requests",
+    "black",
+    "pylint",
+    "types-requests",
+    "isort",
+    "pytest",
+    "coverage",
+    "pytest-cov",
+    "pytest-ordering",
+    "pytest-asyncio",
+    "pyright",
+    "pytest-aioresponses",
+    "ruff",
+    "sqlacodegen==3.0.0rc5",
+    "ipython>=8.0.0,<9",
+    "bump-my-version>=1.1.2,<2",
+]
 
-ruff = "*"
-sqlacodegen = "3.0.0rc5"
-ipython = "^8.0.0"
-bump-my-version = "^1.1.2"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 120
@@ -60,13 +73,8 @@ profile = "black"
 line_length = 120
 skip_gitignore = true
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.pytest]
 testpaths = "tests/"
-
 
 [tool.bumpversion]
 current_version = "0.2.1"
@@ -90,3 +98,6 @@ filename = 'antgent/__init__.py'
 search = "__version__ = \"{current_version}\""
 replace = "__version__ = \"{new_version}\""
 regex = true
+
+[tool.hatch.metadata]
+allow-direct-references = true
