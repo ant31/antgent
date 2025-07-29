@@ -1,10 +1,10 @@
-from typing import Any, Literal, Self, TypeVar
+from typing import Any, Literal, TypeVar
 
 from agents import (
     TResponseInputItem,
 )
 from agents.model_settings import ModelSettings
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, RootModel, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, RootModel
 
 from .visibility import Visibility
 
@@ -31,18 +31,27 @@ class AgentConfig(ModelInfo):
     model_config = ConfigDict(extra="allow", validate_assignment=True)
     name: str = Field(default="", description="name the agent")
     description: str = Field(default="", description="Description of the agent")
-    output_cls: type[Any] | None = Field(default=None, description="The output class of the agent")
-    structured: bool = Field(default=True, description="If True, the agent will return a structured output")
-    structured_cls: type[Any] | None = Field(default=None, description="The structured output class of the agent")
 
-    @model_validator(mode="after")
-    def validate_model(self) -> Self:
+
+TOutput = TypeVar("TOutput")
+TStructured = TypeVar("TStructured")
+
+
+class AgentFrozenConfig[TOutput, TStructured](BaseModel):
+    model_config = ConfigDict(extra="allow", frozen=True)
+    output_cls: type[TOutput] | None = Field(default=None, description="The output class of the agent")
+    structured: bool = Field(default=True, description="If True, the agent will return a structured output")
+    structured_cls: type[TStructured] | None = Field(
+        default=None, description="The structured output class of the agent"
+    )
+
+    def get_structured_cls(self) -> type[TStructured] | None:
         if self.structured and self.structured_cls is None and self.output_cls is None:
             raise ValueError("If structured is True, structured_cls or output_cls must be provided")
         if self.structured and self.structured_cls is None and self.output_cls is not None:
             # If structured is True but structured_cls is None, use output_cls as structured_cls
-            self.structured_cls = self.output_cls
-        return self
+            return self.output_cls
+        return self.structured_cls
 
 
 class AgentsConfigSchema(RootModel):

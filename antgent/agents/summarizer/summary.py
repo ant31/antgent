@@ -1,7 +1,7 @@
 from agents import ModelSettings, TResponseInputItem
 
 from antgent.agents.base import BaseAgent
-from antgent.models.agent import AgentConfig, PrepareRun, TLLMInput
+from antgent.models.agent import AgentConfig, AgentFrozenConfig, PrepareRun, TLLMInput
 
 from .models import SummaryInput, SummaryOutput
 
@@ -60,7 +60,12 @@ class SummaryAgent(BaseAgent[SummaryInput, SummaryOutput]):
             top_p=0.8,
         ),
     )
-    output_cls = SummaryOutput
+
+    agent_config = AgentFrozenConfig[SummaryOutput, SummaryOutput](
+        output_cls=SummaryOutput,
+        structured=True,
+        structured_cls=SummaryOutput,
+    )
 
     def prompt(self) -> str:
         return PROMPT

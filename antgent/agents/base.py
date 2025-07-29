@@ -18,7 +18,14 @@ from agents.extensions.models.litellm_model import LitellmModel
 from litellm.utils import get_max_tokens, token_counter
 
 from antgent.clients import openai_aclient
-from antgent.models.agent import AgentConfig, AgentRunMetadata, LLMsConfigSchema, PrepareRun, TLLMInput
+from antgent.models.agent import (
+    AgentConfig,
+    AgentFrozenConfig,
+    AgentRunMetadata,
+    LLMsConfigSchema,
+    PrepareRun,
+    TLLMInput,
+)
 from antgent.utils.aliases import Aliases, AliasResolver
 
 logger = logging.getLogger(__name__)
@@ -33,7 +40,7 @@ class ContextTooLargeError(ValueError): ...
 class BaseAgent[TContext, TOutput]:
     name_id: str = "Base"
     default_config: AgentConfig
-    output_cls: type[TOutput]
+    agent_config: AgentFrozenConfig
     alias_resolver: AliasResolver | None = Aliases
     llms_conf: LLMsConfigSchema | None = None
 
@@ -92,7 +99,7 @@ class BaseAgent[TContext, TOutput]:
             name=self.conf.name,
             model=self.get_sdk_model(),
             instructions=self.prompt(),
-            output_type=self.conf.structured_cls,
+            output_type=self.agent_config.get_structured_cls(),
             model_settings=self.conf.model_settings,
         )
 
