@@ -96,8 +96,8 @@ def test_resolve_non_existent_alias_returns_input(base_resolver):
     assert empty_res.resolve("another_one") == "another_one"
 
 def test_resolve_alias_name_not_string(base_resolver):
-    with pytest.raises(TypeError, match="Alias name to resolve must be a string."):
-        base_resolver.resolve(123) # type: ignore
+    with pytest.raises(TypeError, match=r"Alias name to resolve must be a string\."):
+        base_resolver.resolve(123)  # type: ignore
 
 # --- Test Cases for Loop Detection in resolve ---
 
