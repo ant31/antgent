@@ -79,7 +79,7 @@ class TracesConfigSchema(BaseConfig):
 
 
 class LiteLLMConfigSchema(BaseConfig):
-    base_url: str = Field(default="https://litellm.conny.dev")
+    base_url: str | None = Field(default=None)
     token: str = Field(default="sk-ukiiHpNuHgI2ZqupmPUA4")
 
 

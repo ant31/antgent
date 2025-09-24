@@ -134,3 +134,12 @@ class AgentWorkflowInput[TInput](BaseModel):
         default_factory=Visibility, description="The visibility information for the agent workflow run"
     )
     wid: WorkflowInfo = Field(default_factory=WorkflowInfo, description="The ID of the temporal workflow")
+
+
+from antgent.agents.summarizer.models import SummaryInput, SummaryResult  # noqa: E402
+
+
+class AgentTextSummaryWorkflowOutput(AgentWorkflowOutput[SummaryResult]): ...
+
+
+class AgentTextSummaryWorkflowInput(AgentWorkflowInput[SummaryInput]): ...

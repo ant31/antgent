@@ -1,7 +1,7 @@
 from agents import ModelSettings, TResponseInputItem
 
 from antgent.agents.base import BaseAgent
-from antgent.models.agent import AgentConfig, PrepareRun, TLLMInput
+from antgent.models.agent import AgentConfig, AgentFrozenConfig, PrepareRun, TLLMInput
 
 from .models import SummaryGrade, SummaryGradeCtx
 
@@ -16,7 +16,7 @@ The less verbose text must contains ALL entities, date, place, people, addresses
 3. Take away points for every information that are missing
 4. Shortness of the less verbose text is too relevant and should impact too much the grade
 
-Provide the feedbacks as json 
+Provide the feedbacks as json
 {
 "missing_entitites": ["date XYZ"]
 "feebacks": [
@@ -32,18 +32,18 @@ Provide the feedbacks as json
 
 class SummaryJudgeAgent(BaseAgent[SummaryGradeCtx, SummaryGrade]):
     name_id = "SummaryJudge"
+    agent_config = AgentFrozenConfig(output_cls=SummaryGrade, structured=True)
     default_config = AgentConfig(
         name="SummaryJudge",
         client="litellm",
         description="Judge the less verbose text and provide feedbacks",
-        model="gemini/gemini-2.5-pro-preview-05-06",
+        model="gemini/gemini-pro",
         model_settings=ModelSettings(
-            tool_choice="auto",
+            tool_choice="none",
         ),
     )
-    output_cls = SummaryGrade
 
-    def prompt(self):
+    def prompt(self) -> str:
         return PROMPT
 
     async def prep_input(self, llm_input: TLLMInput, ctx: SummaryGradeCtx) -> PrepareRun[SummaryGradeCtx]:

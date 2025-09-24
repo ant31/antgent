@@ -1,8 +1,6 @@
 import csv
 import io
-from typing import Any, cast
-
-from openpyxl import Workbook
+from typing import cast
 
 
 def _get_nesting_cols_by_name(nesting_keys: list[str], fieldnames: list[str]) -> list[str]:
@@ -121,40 +119,3 @@ def list_dict_to_csv(data: list[dict]) -> str:
 
     # Return the complete CSV string from the buffer.
     return output.getvalue()
-
-
-def list_dict_to_xlsx_bytes(data: list[dict[str, Any]]) -> bytes:
-    """
-    Converts a list of dictionaries to an XLSX file as bytes.
-
-    Args:
-        data: A list of dictionaries. Each dictionary represents a row.
-              It's assumed that all dictionaries have the same keys.
-
-    Returns:
-        The XLSX file content as bytes.
-        Returns empty bytes if the input list is empty.
-    """
-    if not data:
-        return b""
-
-    workbook = Workbook()
-    sheet = workbook.active
-
-    # Write headers
-    headers = list(data[0].keys())
-    for col_num, header_title in enumerate(headers, 1):
-        cell = sheet.cell(row=1, column=col_num)
-        cell.value = header_title
-
-    # Write data rows
-    for row_num, row_data in enumerate(data, 2):
-        for col_num, header in enumerate(headers, 1):
-            cell = sheet.cell(row=row_num, column=col_num)
-            cell.value = row_data.get(header)
-
-    # Save to a bytes buffer
-    buffer = io.BytesIO()
-    workbook.save(buffer)
-    buffer.seek(0)
-    return buffer.getvalue()
