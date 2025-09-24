@@ -152,3 +152,9 @@ bump:
 upgrade-dep:
 	uv sync --upgrade
 	uv lock -U --resolution=highest
+
+docs:
+	uv run mkdocs build
+
+serve-docs:
+	uv run mkdocs serve

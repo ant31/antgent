@@ -6,10 +6,9 @@ from typing import Annotated
 
 import typer
 import uvicorn
-from ant31box.init import init
 
-from antgent.config import Config
 from antgent.config import config as confload
+from antgent.init import init
 
 app = typer.Typer()
 logger = logging.getLogger("ant31box.info")
@@ -24,27 +23,11 @@ class LogLevel(str, enum.Enum):
     trace = "trace"
 
 
-def run_server(config: Config):
-    logger.info("Starting server")
-    typer.echo(f"{config.server.model_dump()}")
-    init(config.conf, "fastapi")
-    uvicorn.run(
-        config.server.server,
-        host=config.server.host,
-        port=config.server.port,
-        log_level=config.logging.level,
-        # log_config=config.logging.log_config,
-        use_colors=config.logging.use_colors,
-        reload=config.server.reload,
-        factory=True,
-    )
-
-
 # pylint: disable=no-value-for-parameter
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-positional-arguments
 @app.command(context_settings={"auto_envvar_prefix": "FASTAPI"})
-def server(
+def server(  # server_wrapper
     config: Annotated[
         Path | None,
         typer.Option(
@@ -102,4 +85,16 @@ def server(
     if host:
         _config.conf.server.host = host
 
-    run_server(_config)
+    logger.info("Starting server")
+    typer.echo(f"{_config.server.model_dump()}")
+    init(_config.conf, mode="server")
+    uvicorn.run(
+        _config.server.server,
+        host=_config.server.host,
+        port=_config.server.port,
+        log_level=_config.logging.level,
+        # log_config=config.logging.log_config,
+        use_colors=_config.logging.use_colors,
+        reload=_config.server.reload,
+        factory=True,
+    )

@@ -1,0 +1,68 @@
+site_name: antgent
+site_url: https://ant31.github.io/antgent
+repo_url: https://github.com/ant31/antgent
+repo_name: ant31/antgent
+edit_uri: ""
+
+docs_dir: documentations
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.instant
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github-alt
+
+plugins:
+  - search
+  - include-markdown
+
+nav:
+  - Home: index.md
+  - Introduction:
+      - What is antgent?: introduction/what-is-antgent.md
+      - Key Features: introduction/key-features.md
+      - Core Concepts: introduction/core-concepts.md
+  - Release Notes:
+      - Changelog: changelog.md
+      - Migration Guide: migration.md
+  - Engineering Guides:
+      - Home: engineering/index.md
+      - Adding a new Agent: engineering/adding-a-new-agent.md
+      - Adding a new Workflow: engineering/adding-a-workflow.md
+      - Adding Agent Tools (Function Calling): engineering/adding-agent-tools.md
+      - Adding a CLI command: engineering/adding-cli-commands.md
+      - Generating Reports (PDF/DOCX): engineering/generating-reports.md
+      - Dependencies and Licenses: engineering/dependencies-and-licenses.md
+  - Architecture & Concepts:
+      - Managing Data Models: engineering/managing-data-models.md
+      - Configuration Management: engineering/configuration-management.md
+      - Integrating External Services: engineering/integrating-external-services.md
+      - Debugging and Tracing: engineering/debugging-and-tracing.md
+      - Advanced Temporal Concepts: engineering/advanced-temporal-concepts.md
+  - Development & CI/CD:
+      - Coding Style and Conventions: development/coding-style.md
+      - Testing Strategy: engineering/testing-strategy.md
+      - CI/CD and Deployment: engineering/cicd-and-deployment.md

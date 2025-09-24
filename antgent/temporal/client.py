@@ -1,43 +1,42 @@
+from functools import lru_cache
+
 from temporalio.client import Client
-from temporalloop.converters.pydantic import pydantic_data_converter
 
 from antgent.config import TemporalCustomConfigSchema, config
-
-TEMPORAL_CLIENT: Client | None = None
-
-
-async def tclient(conf: TemporalCustomConfigSchema | None = None) -> Client:
-    return await GTClient(conf).client()
+from antgent.utils.importpy import import_from_string
 
 
-class TClient:
-    def __init__(self, conf: TemporalCustomConfigSchema | None = None) -> None:
+class TClientSingleton:
+    _client: Client | None = None
+
+    async def get_client(self, conf: TemporalCustomConfigSchema | None = None) -> Client:
+        """Get a singleton Temporal client."""
+        if self._client:
+            return self._client
+
         if conf is None:
             conf = config().temporalio
 
-        self.conf: TemporalCustomConfigSchema = conf
-        self._client = None
+        # The data converter can be a string, so we need to import it.
+        @lru_cache(maxsize=1)
+        def get_data_converter():
+            if conf.converter:
+                return import_from_string(conf.converter)
+            return None
 
-    def set_client(self, client: Client) -> None:
-        self._client = client
-
-    async def client(self) -> Client:
-        if self._client is None:
-            self._client = await Client.connect(
-                self.conf.host,
-                namespace=self.conf.namespace,
-                lazy=True,
-                data_converter=pydantic_data_converter,
-            )
+        self._client = await Client.connect(
+            conf.host,
+            namespace=conf.namespace,
+            data_converter=get_data_converter(),
+        )
         return self._client
 
 
-class GTClient(TClient):
-    def __new__(cls, conf: TemporalCustomConfigSchema | None = None):
-        if not hasattr(cls, "instance") or cls.instance is None:
-            cls.instance = TClient(conf)
-        return cls.instance
+_tclient_singleton = TClientSingleton()
 
-    @classmethod
-    def reinit(cls) -> None:
-        cls.instance = None
+
+async def tclient(conf: TemporalCustomConfigSchema | None = None) -> Client:
+    """
+    Get a singleton Temporal client.
+    """
+    return await _tclient_singleton.get_client(conf)

@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 from temporalio.client import Client, WorkflowExecution
 from temporalio.common import SearchAttributeKey
 
-from antgent.config import TemporalCustomConfigSchema, config
+from antgent.config import config
 from antgent.temporal.client import tclient
 
 router = APIRouter(prefix="/api", tags=["Workflows"])
@@ -17,15 +17,18 @@ def get_workflow_types_from_config() -> list[str]:
     workflow_types = set()
 
     # 1. Get from loaded configuration which might override the defaults.
-    worker_configs = config().temporalio.workers
+    worker_configs = config().workers
     for worker_config in worker_configs:
         for workflow in worker_config.workflows:
             workflow_types.add(workflow.split(":")[-1])
 
     # 2. Get from default schema to ensure base workflows are always present.
-    default_workers = TemporalCustomConfigSchema.model_fields["workers"].default
-    if default_workers:
-        for worker_config in default_workers:
+    from antgent.config import ConfigSchema
+
+    temporal_config_field = ConfigSchema.model_fields["temporalio"]
+    default_temporal_config = temporal_config_field.get_default()
+    if default_temporal_config and default_temporal_config.workers:
+        for worker_config in default_temporal_config.workers:
             for workflow in worker_config.workflows:
                 workflow_types.add(workflow.split(":")[-1])
 

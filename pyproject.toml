@@ -1,6 +1,6 @@
 [project]
 name = "antgent"
-version = "0.6.0"
+version = "0.7.0"
 description = ""
 authors = [{ name = "ant31", email = "2t.antoine@gmail.com" }]
 requires-python = ">=3.12,<4"
@@ -14,13 +14,13 @@ dependencies = [
     "typer>=0.16.0",
     "pyyaml",
     "sentry-sdk[fastapi]",
-    "temporalloop >= 0.2.2",
+    "temporalloop @ git+https://github.com/ant31/temporal-loop@v2",
     "typing-extensions",
     "ant31box[all] @ git+https://github.com/ant31/ant31box@main",
     "openai",
     "aiohttp",
     "aiohttp-prometheus-exporter",
-    "tokenizers <= v0.21.3",
+    "tokenizers",
     "tiktoken",
     "google-genai",
     "openai-agents",
@@ -58,6 +58,9 @@ dev = [
     "sqlacodegen==3.0.0rc5",
     "ipython>=8.0.0,<9",
     "bump-my-version>=1.1.2,<2",
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.30",
+    "mkdocs-include-markdown-plugin>=7.1.3",
 ]
 
 [build-system]
@@ -79,7 +82,7 @@ skip_gitignore = true
 testpaths = "tests/"
 
 [tool.bumpversion]
-current_version = "0.6.0"
+current_version = "0.7.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"

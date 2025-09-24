@@ -112,21 +112,12 @@ For Temporal to recognize your new workflow and activities, you must register th
 ```python
 # antgent/config.py
 from pydantic import Field
-from temporalloop.config_loader import TemporalConfigSchema, WorkerConfigSchema
+from temporalloop.config import TemporalSettings as TemporalConfigSchema
+from temporalloop.config import WorkerSettings as WorkerConfigSchema
 
 class TemporalCustomConfigSchema(TemporalConfigSchema):
     workers: list[WorkerConfigSchema] = Field(
         default=[
-            # ... other worker configs
-            WorkerConfigSchema(
-                name="antgent-workflow",
-                queue="antgent-queue",
-                activities=[],
-                workflows=[
-                    # ... other workflows
-                    "antgent.workflows.doc_processor.workflow:DocumentProcessorWorkflow",
-                ],
-            ),
             WorkerConfigSchema(
                 name="antgent-activities",
                 queue="antgent-queue-activity",
@@ -134,9 +125,17 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                     # ... other activities
                     "antgent.workflows.doc_processor.workflow:run_summarizer_activity",
                 ],
-                workflows=[],
+            ),
+            WorkerConfigSchema(
+                name="antgent-workflow",
+                queue="antgent-queue",
+                workflows=[
+                    # ... other workflows
+                    "antgent.workflows.doc_processor.workflow:DocumentProcessorWorkflow",
+                ],
             ),
         ],
+        exclude=False,
     )
     # ...
 ```
@@ -179,9 +178,10 @@ async def run_doc_processor(ctx: DocProcessorCtx) -> dict[str, str]:
     )
 
     queue = get_workflow_queue()
+    # The input object is passed directly to the workflow
     await client.start_workflow(
         DocumentProcessorWorkflow.run,
-        {"agent_input": agent_input.model_dump(mode="json")},
+        agent_input,
         id=workflow_id,
         task_queue=queue,
     )
