@@ -23,7 +23,7 @@ Whether you're building a multi-step document processing pipeline, a conversatio
 -   **🚀 Ready-to-Use Components**: Get started quickly with built-in workflows and agents, such as a powerful, iterative text summarizer.
 -   **⚡ High-Performance API**: A modern, asynchronous API server built with [FastAPI](https://fastapi.tiangolo.com/) and [Pydantic](https://pydantic.dev/) for high performance and automatic data validation.
 -   **🔍 Full Observability**: Deep insights into your agent's performance and behavior with integrated tracing support for [Logfire](https://logfire.pydantic.dev/) and [Langfuse](https://langfuse.com/).
--   **🔧 Rich CLI Toolkit**: Manage your services with a command-line interface built with [Click](https://click.palletsprojects.com/), including commands to run the server, Temporal workers, and other utilities.
+-   **🔧 Rich CLI Toolkit**: Manage your services with a command-line interface built with [Typer](https://typer.tiangolo.com/), including commands to run the server, Temporal workers, and other utilities.
 -   **📦 Extensible by Design**: Easily add new workflows, agents, API endpoints, and utility functions to suit your project's needs.
 
 ## 🏗️ Architecture Overview
@@ -74,12 +74,11 @@ temporalio:
     - name: "antgent-workflow"
       queue: "antgent-queue"
       workflows:
-        - "antgent.workflows.summarizer:TextSummarizerAllWorkflow"
-        - "antgent.workflows.summarizer:TextSummarizerOneTypeWorkflow"
+        - "antgent.workflows.summarizer:TextSummarizerWorkflow"
     - name: "antgent-activities"
       queue: "antgent-queue-activity"
       activities:
-        - "antgent.workflows.summarizer:run_summarizer_one_type_activity"
+        - "antgent.workflows.summarizer:run_summarizer_activity"
 
 # LLM provider configuration (using litellm)
 llms:
@@ -104,13 +103,13 @@ You need to run two separate processes: the Temporal Worker and the API Server.
 
 **Terminal 1: Start the Temporal Worker**
 ```bash
-uv run bin/antgent looper --config=localconfig.yaml
+uv run antgent looper --config=localconfig.yaml
 ```
 This worker listens for tasks on the queues defined in your config and executes your workflows and activities.
 
 **Terminal 2: Start the API Server**
 ```bash
-./bin/antgent server --config localconfig.yaml
+uv run antgent server --config localconfig.yaml
 ```
 The API server will be available at `http://127.0.0.1:8000`. You can access the auto-generated documentation at `http://127.0.0.1:8000/docs`.
 
@@ -121,7 +120,7 @@ With the server running, you can start a summarization workflow via the API.
 Use `curl` to submit a text for summarization:
 ```bash
 curl -X 'POST' \
-  'http://127.0.0.1:8000/api/workflows/summarizer/run' \
+  'http://127.0.0.1:8000/api/workflows/summarizer' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -137,7 +136,7 @@ This will return a `workflow_id`. You can use this ID to check the status and ge
 
 ```bash
 # Replace {workflow_id} with the ID from the previous step
-curl 'http://127.0.0.1:8000/api/workflows/summarizer/{workflow_id}/status'
+curl 'http://127.0.0.1:8000/api/workflows/summarizer/{workflow_id}'
 ```
 
 Keep polling this endpoint until the status is `COMPLETED`, and the result will contain the generated summaries.

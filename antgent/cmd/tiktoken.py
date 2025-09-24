@@ -1,22 +1,24 @@
 import json
+from typing import Annotated
 
-import click
 import tiktoken
+from ant31box.cmd.typer.models import OutputEnum
+from typer import Exit, Option, echo, get_text_stream
 
 
-@click.command()
-@click.option("--output", "-o", default="json", type=click.Choice(["json", "text"]))
-@click.pass_context
 def tikcount(
-    ctx: click.Context,
-    output: str,
+    output: Annotated[
+        OutputEnum,
+        Option("--output", "-o", help="Output format."),
+    ] = OutputEnum.json,
 ) -> None:
-    stdin_text = click.get_text_stream("stdin")
+    """Counts tokens from stdin."""
+    stdin_text = get_text_stream("stdin")
     model = "gpt-4o"
     encoder = tiktoken.encoding_for_model(model)
     res = {"tokens": len(encoder.encode(stdin_text.read())), "model": model}
     if output == "json":
-        click.echo(json.dumps(res, indent=2))
+        echo(json.dumps(res, indent=2))
     else:
-        click.echo(res["tokens"])
-    ctx.exit()
+        echo(res["tokens"])
+    raise Exit()

@@ -1,21 +1,32 @@
 #!/usr/bin/env python3
+import enum
 import logging
+from pathlib import Path
+from typing import Annotated
 
-import click
+import typer
 import uvicorn
-from ant31box.config import LOG_LEVELS
 from ant31box.init import init
 
 from antgent.config import Config
 from antgent.config import config as confload
 
-LEVEL_CHOICES = click.Choice(list(LOG_LEVELS.keys()))
+app = typer.Typer()
 logger = logging.getLogger("ant31box.info")
+
+
+class LogLevel(str, enum.Enum):
+    critical = "critical"
+    error = "error"
+    warning = "warning"
+    info = "info"
+    debug = "debug"
+    trace = "trace"
 
 
 def run_server(config: Config):
     logger.info("Starting server")
-    click.echo(f"{config.server.model_dump()}")
+    typer.echo(f"{config.server.model_dump()}")
     init(config.conf, "fastapi")
     uvicorn.run(
         config.server.server,
@@ -32,65 +43,50 @@ def run_server(config: Config):
 # pylint: disable=no-value-for-parameter
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-positional-arguments
-@click.command(context_settings={"auto_envvar_prefix": "FASTAPI"})
-@click.option(
-    "--config",
-    "-c",
-    type=click.Path(exists=True),
-    default=None,
-    help="Configuration file in YAML format.",
-    show_default=True,
-)
-@click.option(
-    "--host",
-    type=str,
-    default=None,
-    help="Address of the server",
-    show_default=True,
-)
-@click.option(
-    "--temporal-host",
-    type=str,
-    default=None,
-    help="Address of the server",
-    show_default=True,
-)
-@click.option(
-    "--log-config",
-    type=click.Path(exists=True),
-    default=None,
-    help="Logging configuration file. Supported formats: .ini, .json, .yaml.",
-    show_default=True,
-)
-@click.option(
-    "--log-level",
-    type=LEVEL_CHOICES,
-    default="info",
-    help="Log level.",
-    show_default=True,
-)
-@click.option(
-    "--use-colors/--no-use-colors",
-    is_flag=True,
-    default=True,
-    help="Enable/Disable colorized logging.",
-)
-@click.option(
-    "--port",
-    default=None,
-    type=int,
-    help="Port to listen on",
-)
+@app.command(context_settings={"auto_envvar_prefix": "FASTAPI"})
 def server(
-    config: str,
-    host: str,
-    port: int,
-    temporal_host: str,
-    use_colors: bool,
-    log_level: str,
-    log_config: str,
+    config: Annotated[
+        Path | None,
+        typer.Option(
+            "--config",
+            "-c",
+            exists=True,
+            help="Configuration file in YAML format.",
+            show_default=True,
+        ),
+    ] = None,
+    host: Annotated[str | None, typer.Option("--host", help="Address of the server", show_default=True)] = None,
+    port: Annotated[int | None, typer.Option("--port", help="Port to listen on")] = None,
+    temporal_host: Annotated[
+        str | None, typer.Option("--temporal-host", help="Address of the server", show_default=True)
+    ] = None,
+    use_colors: Annotated[
+        bool,
+        typer.Option(
+            "--use-colors/--no-use-colors",
+            help="Enable/Disable colorized logging.",
+        ),
+    ] = True,
+    log_level: Annotated[
+        LogLevel,
+        typer.Option(
+            "--log-level",
+            help="Log level.",
+            show_default=True,
+            case_sensitive=False,
+        ),
+    ] = LogLevel.info,
+    log_config: Annotated[
+        Path | None,
+        typer.Option(
+            "--log-config",
+            exists=True,
+            help="Logging configuration file. Supported formats: .ini, .json, .yaml.",
+            show_default=True,
+        ),
+    ] = None,
 ) -> None:
-    _config = confload(config)
+    _config = confload(str(config) if config else None)
     if host:
         _config.server.host = host
     if port:
@@ -98,9 +94,9 @@ def server(
     if temporal_host:
         _config.temporalio.host = temporal_host
     if log_level:
-        _config.logging.level = log_level
+        _config.logging.level = log_level.value
     if log_config:
-        _config.logging.log_config = log_config
+        _config.logging.log_config = str(log_config)
     if use_colors is not None:
         _config.logging.use_colors = use_colors
     if host:
