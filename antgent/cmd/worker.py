@@ -2,17 +2,28 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from temporalloop.cmd.looper import main as looper_main
-from temporalloop.cmd.scheduler import scheduler as scheduler_main
+from temporalloop.cmd import looper as looper_cmd
+from temporalloop.cmd import scheduler as scheduler_cmd
+from temporalloop.cmd.models import LogLevel
 
-from antgent.config import config as confload
+from antgent.config import config
+from antgent.init import init
 
 app = typer.Typer(no_args_is_help=True)
 
 
-@app.command()
-def looper(
-    config: Annotated[
+@app.command(
+    name="looper",
+    help="Starts the temporal worker.",
+    context_settings={
+        "auto_envvar_prefix": "TEMPORALRUNNER",
+        "allow_extra_args": True,
+        "ignore_unknown_options": True,
+    },
+)
+def looper_wrapper(  # pylint: disable=too-many-arguments
+    ctx: typer.Context,
+    config_path: Annotated[
         Path | None,
         typer.Option(
             "--config",
@@ -22,35 +33,95 @@ def looper(
             show_default=True,
         ),
     ] = None,
-) -> None:
-    """Starts the temporal worker."""
-    _ = confload(str(config) if config else None)
-    looper_main.main(args=[], standalone_mode=False)
-
-
-@app.command()
-def scheduler(
-    config: Annotated[
+    namespace: Annotated[
+        str | None,
+        typer.Option(
+            "--namespace",
+            "-n",
+            help="temporalio namespace",
+            show_default=True,
+        ),
+    ] = "default",
+    host: Annotated[
+        str | None,
+        typer.Option("--host", help="Address of the Temporal Frontend", show_default=True),
+    ] = "localhost:7233",
+    queue: Annotated[
+        str | None,
+        typer.Option("--queue", "-q", help="Queue to listen on", show_default=True),
+    ] = None,
+    workflow: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--workflow",
+            "-w",
+            help="Workflow managed by the worker: python.module:WorkflowClass. Repeat for more workflows.",
+        ),
+    ] = None,
+    activity: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--activity",
+            "-a",
+            help="Activity: python.module:activity_function. Repeat for more activities.",
+        ),
+    ] = None,
+    interceptor: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--interceptor",
+            "-i",
+            help="Interceptor class to add: python.module:InterceptorClass. Repeat for more interceptors.",
+        ),
+    ] = None,
+    log_config: Annotated[
         Path | None,
         typer.Option(
-            "--config",
-            "-c",
+            "--log-config",
             exists=True,
-            help="Configuration file in YAML format.",
+            help="Logging configuration file. Supported formats: .ini, .json, .yaml.",
             show_default=True,
         ),
     ] = None,
-    all: Annotated[bool, typer.Option("--all", help="Run all schedules.")] = False,
-    run: Annotated[str | None, typer.Option("--run", help="Run one schedule.")] = None,
-    daemon: Annotated[bool, typer.Option("--daemon", help="Run as a daemon.")] = False,
-) -> None:
-    """Starts the temporal scheduler."""
-    _ = confload(str(config) if config else None)
-    args = []
-    if all:
-        args.append("--all")
-    if run:
-        args.extend(["--run", run])
-    if daemon:
-        args.append("--daemon")
-    scheduler_main.main(args=args, standalone_mode=False)
+    log_level: Annotated[
+        LogLevel,
+        typer.Option(
+            "--log-level",
+            help="Log level.",
+            show_default=True,
+            case_sensitive=False,
+        ),
+    ] = LogLevel.info,
+    use_colors: Annotated[
+        bool,
+        typer.Option(
+            "--use-colors/--no-use-colors",
+            help="Enable/Disable colorized logging.",
+        ),
+    ] = True,
+):
+    """Wrapper to initialize before starting the looper."""
+    _config = config(str(config_path) if config_path else None)
+    init(_config.conf, mode="worker")
+
+    # Call the original looper main function with all arguments from the context
+    looper_cmd.main(
+        ctx,
+        config=config_path,
+        namespace=namespace,
+        host=host,
+        queue=queue,
+        workflow=workflow,
+        activity=activity,
+        interceptor=interceptor,
+        log_config=log_config,
+        log_level=log_level,
+        use_colors=use_colors,
+    )
+
+
+app.command(
+    name="scheduler",
+    help="Starts the temporal scheduler.",
+    context_settings={"auto_envvar_prefix": "TEMPORALRUNNER"},
+)(scheduler_cmd.scheduler)

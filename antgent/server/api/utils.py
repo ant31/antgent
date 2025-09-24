@@ -24,15 +24,16 @@ def get_workflow_queue() -> str:
     It finds the first worker with workflows defined in its configuration.
     If no worker has workflows, it falls back to the first worker's queue.
     """
-    for worker in config().temporalio.workers:
+    workers = config().workers
+    for worker in workers:
         if worker.workflows:
             return worker.queue
 
-    if not config().temporalio.workers:
+    if not workers:
         raise ValueError("No temporal workers configured.")
 
     logger.warning("No worker with workflows configured. Falling back to first worker's queue.")
-    return config().temporalio.workers[0].queue
+    return workers[0].queue
 
 
 async def prep_contents(

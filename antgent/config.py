@@ -14,7 +14,9 @@ from ant31box.config import (
 from ant31box.s3 import S3ConfigSchema
 from pydantic import ConfigDict, Field, RootModel
 from pydantic_settings import SettingsConfigDict
-from temporalloop.config_loader import TemporalConfigSchema, TemporalScheduleSchema, WorkerConfigSchema
+from temporalloop.config import TemporalSettings as TemporalConfigSchema
+from temporalloop.config import WorkerSettings as WorkerConfigSchema
+from temporalloop.schedule import Schedule as TemporalScheduleSchema
 
 from antgent.models.agent import AgentConfig, AgentsConfigSchema, LLMsConfigSchema
 from antgent.utils.aliases import AliasResolver
@@ -88,30 +90,31 @@ class FastAPIConfigCustomSchema(FastAPIConfigSchema):
 
 
 class TemporalCustomConfigSchema(TemporalConfigSchema):
+    converter: str | None = Field(default="temporalio.contrib.pydantic:pydantic_data_converter")
+    # default="temporalloop.converters.pydantic:pydantic_data_converter")
     workers: list[WorkerConfigSchema] = Field(
         default=[
             WorkerConfigSchema(
-                metric_bind_address="",
                 name="antgent-activities",
                 queue="antgent-queue-activity",
                 activities=[
                     "antgent.temporal.activities:echo",
+                    "antgent.temporal.activities:aecho",
+                    "antgent.workflows.summarizer:run_summarizer_activity",
                 ],
-                workflows=[],
             ),
             WorkerConfigSchema(
-                metric_bind_address="",
                 name="antgent-workflow",
                 queue="antgent-queue",
-                activities=[],
                 workflows=[
                     "antgent.temporal.workflows.echo:EchoWorkflow",
+                    "antgent.temporal.workflows.echo:EchoAsyncWorkflow",
+                    "antgent.workflows.summarizer:TextSummarizerWorkflow",
                 ],
             ),
         ],
+        exclude=False,
     )
-    converter: str | None = Field(default="temporalio.contrib.pydantic:pydantic_data_converter")
-    # default="temporalloop.converters.pydantic:pydantic_data_converter")
 
 
 ENVPREFIX = "ANTGENT"
@@ -131,8 +134,8 @@ class ConfigSchema(ant31box.config.ConfigSchema):
     aliases: AliasesSchema = Field(default_factory=AliasesSchema)
     llms: LLMsConfigSchema = Field(default_factory=LLMsConfigSchema)
     logging: LoggingConfigSchema = Field(default_factory=LoggingCustomConfigSchema, exclude=True)
-    temporalio: TemporalCustomConfigSchema = Field(default_factory=TemporalCustomConfigSchema, exclude=True)
-    schedules: dict[str, TemporalScheduleSchema] = Field(default_factory=dict, exclude=True)
+    temporalio: TemporalCustomConfigSchema = Field(default_factory=TemporalCustomConfigSchema, exclude=False)
+    schedules: dict[str, TemporalScheduleSchema] = Field(default_factory=dict, exclude=False)
     app: AppConfigSchema = Field(default_factory=AppConfigSchema)
     agents: AgentsConfigSchema = Field(default_factory=AgentsConfigSchema)
     traces: TracesConfigSchema = Field(default_factory=TracesConfigSchema)
@@ -153,6 +156,10 @@ class AntgentConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
     @property
     def temporalio(self) -> TemporalCustomConfigSchema:
         return self.conf.temporalio
+
+    @property
+    def workers(self) -> list[WorkerConfigSchema]:
+        return self.conf.temporalio.workers
 
     @property
     def schedules(self) -> dict[str, TemporalScheduleSchema]:

@@ -7,13 +7,14 @@ from temporalio.client import Client
 
 from antgent.models.agent import AgentTextSummaryWorkflowInput, AgentWorkflowInput, WorkflowInfo
 from antgent.temporal.client import tclient
+from antgent.workflows.base import BaseWorkflowInput
 from antgent.workflows.summarizer import TextSummarizerWorkflow
 from antgent.workflows.summarizer.models import (
     AgentTextSummarizerWorkflowCtxInput,
     TextSummarizerWorkflowContext,
 )
 
-from .utils import get_workflow_queue
+from ..utils import get_workflow_queue
 
 router = APIRouter(prefix="/api/workflows", tags=["Summarizer"])
 
@@ -67,9 +68,10 @@ async def run_summarizer(
         context=context, wid=WorkflowInfo(wid=workflow_id, name=TextSummarizerWorkflow.__name__)
     )
     queue = get_workflow_queue()
+    input_data = BaseWorkflowInput[TextSummarizerWorkflowContext](agent_input=agent_input)
     await client.start_workflow(
         TextSummarizerWorkflow.run,
-        {"agent_input": agent_input.model_dump(mode="json")},
+        input_data,
         id=workflow_id,
         task_queue=queue,
     )
@@ -92,9 +94,10 @@ async def summarizer_retrigger_api(
     workflow_id = f"summarizer-{uuid.uuid4().hex}"
     ctx.wid = WorkflowInfo(wid=workflow_id, name=TextSummarizerWorkflow.__name__)
     queue = get_workflow_queue()
+    input_data = BaseWorkflowInput[TextSummarizerWorkflowContext](agent_input=ctx)
     await client.start_workflow(
         TextSummarizerWorkflow.run,
-        {"agent_input": ctx.model_dump(mode="json")},
+        input_data,
         id=workflow_id,
         task_queue=queue,
     )

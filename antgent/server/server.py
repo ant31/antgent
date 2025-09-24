@@ -9,6 +9,8 @@ from antgent.config import config
 class AntgentServer(Server):
     _routers: ClassVar[set[str]] = {
         "antgent.server.api.job_info:router",
+        "antgent.server.api.workflows.list:router",
+        "antgent.server.api.workflows.summarizer:router",
     }
     _middlewares: ClassVar[set[str]] = {"tokenAuth"}
 

@@ -15,7 +15,7 @@ A `RetryPolicy` can be configured with:
 
 **Example: An activity with a retry policy**
 ```python
-# antgent/workflows/summarizer.py
+# antgent/workflows/summarizer/workflow.py
 from temporalio.common import RetryPolicy
 from datetime import timedelta
 from temporalio import workflow
