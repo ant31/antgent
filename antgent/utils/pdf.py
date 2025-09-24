@@ -1,5 +1,6 @@
 import base64
 import logging
+import pathlib
 import tempfile
 from typing import Literal
 
@@ -24,7 +25,8 @@ def text_to_pdf(text: str) -> bytes:
     pdf = FPDF()
     pdf.add_page()
 
-    pdf.add_font("dejavu-sans", style="", fname="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+    font_path = pathlib.Path(__file__).parent.parent.resolve().joinpath("files/DejaVuSans.ttf")
+    pdf.add_font("dejavu-sans", style="", fname=str(font_path))
     pdf.set_font(family="dejavu-sans", style="", size=8)
 
     pdf.multi_cell(w=0, h=5, text=text)

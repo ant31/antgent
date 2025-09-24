@@ -1,5 +1,6 @@
 from functools import cache
 
+import logfire
 from ant31box.client.filedl import DownloadClient
 from ant31box.s3 import S3Client
 from google import genai
@@ -21,14 +22,16 @@ def openai_client(project_name: str = "openai", llms: LLMsConfigSchema | None = 
     project = llms.get_project(project_name)
     if project is None:
         # use default with ENV
-        return OpenAI()
-
-    return OpenAI(
-        api_key=project.api_key,
-        organization=project.organization_id,
-        project=project.project_id,
-        base_url=project.url,
-    )
+        client = OpenAI()
+    else:
+        client = OpenAI(
+            api_key=project.api_key,
+            organization=project.organization_id,
+            project=project.project_id,
+            base_url=project.url,
+        )
+    logfire.instrument_openai(client)
+    return client
 
 
 @cache
@@ -43,14 +46,16 @@ def openai_aclient(project_name: str = "openai", llms: LLMsConfigSchema | None =
     project = llms.get_project(project_name)
     if project is None:
         # use default with ENV
-        return AsyncOpenAI()
-
-    return AsyncOpenAI(
-        api_key=project.api_key,
-        organization=project.organization_id,
-        project=project.project_id,
-        base_url=project.url,
-    )
+        client = AsyncOpenAI()
+    else:
+        client = AsyncOpenAI(
+            api_key=project.api_key,
+            organization=project.organization_id,
+            project=project.project_id,
+            base_url=project.url,
+        )
+    logfire.instrument_openai(client)
+    return client
 
 
 @cache

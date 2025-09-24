@@ -38,5 +38,6 @@ class GTClient(TClient):
             cls.instance = TClient(conf)
         return cls.instance
 
-    def reinit(self) -> None:
-        self.instance = None
+    @classmethod
+    def reinit(cls) -> None:
+        cls.instance = None
