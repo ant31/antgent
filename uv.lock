@@ -211,7 +211,7 @@ all = [
 
 [[package]]
 name = "antgent"
-version = "0.8.0"
+version = "0.8.2"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
