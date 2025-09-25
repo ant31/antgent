@@ -7,13 +7,15 @@ ENV UV_PYTHON_DOWNLOADS=never
 
 ENV workdir=/app
 WORKDIR $workdir
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 RUN curl -Lo /bin/goose https://github.com/pressly/goose/releases/download/v3.24.1/goose_linux_x86_64; \
      chmod +x /bin/goose;
 
-RUN apt-get update -y
-RUN apt-get install -y openssl ca-certificates
-RUN apt-get install -y libffi-dev build-essential libssl-dev git  curl
-RUN pip install pip -U
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends openssl ca-certificates libffi-dev build-essential libssl-dev git && \
+    rm -rf /var/lib/apt/lists/*
 RUN uv venv
 COPY uv.lock $workdir
 COPY pyproject.toml $workdir
@@ -33,12 +35,9 @@ ENV PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=never
 ENV UV_NO_SYNC=1
-RUN apt-get update && apt-get install -y git curl
 WORKDIR $workdir
 RUN mkdir -p /usr/share/fonts/truetype/dejavu
 COPY DejaVuSans.ttf /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
-COPY --from=ghcr.io/astral-sh/uv:0.7.19 /uv /uvx /bin/
-COPY --from=build /usr/bin/make /usr/bin/make
 COPY --from=build /app /app
 COPY --from=build /bin/goose /usr/bin/goose
 # RUN uv sync --locked --no-dev --compile-bytecode  --no-editable
