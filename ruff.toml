@@ -5,7 +5,7 @@ src = [
 line-length = 120
 indent-width = 4
 
-# Assume Python 3.8
+# Assume Python 3.13
 target-version = "py313"
 # Exclude a variety of commonly ignored directories.
 exclude = [
@@ -433,9 +433,9 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
 [lint]
 select = [
-# "ALL"
     # pycodestyle
     "E",
     # Pyflakes
@@ -448,40 +448,63 @@ select = [
     "SIM",
     # isort
     "I",
+    # pylint
     "PL",
-    "RUF"
-
+    # FASTAPI
+    "FAST",
+    # Ruff-specific rules
+    "RUF",
+    # flake8-comprehensions
+    "C4",
 ]
 ignore = [
-"D",
-"EM101",
-"EM102",
-"TRY003",
-"DTZ",
-"ERA001",
-"FIX",
-"TD",
-"SIM108",
-"ANN401",
-"TRY",
-"ANN",
-"FBT001",
-"FBT002",
-"PLR2004",
-"E501",
-"UP046", # Generic class `AntgentConfig` uses `Generic` subclass instead of type parameter
-"PLC0415",  #`import` should be at the top-level of a file
-"PLR0913" # too many argument in function
-
+    # Docstring rules - disabled per convention
+    "D",
+    # Exception message rules - reasonable to keep flexible
+    "EM101",
+    "EM102",
+    "TRY003",
+    # Datetime timezone - can be too strict
+    "DTZ",
+    # FIXME/TODO comments - allow them
+    "FIX",
+    "TD",
+    # Type annotation rules - too strict for this codebase
+    "ANN",
+    "ANN401",
+    # Try/except rules - too strict
+    "TRY",
+    # Magic numbers - can be overly pedantic
+    "PLR2004",
+    # Generic class type parameter - specific compatibility case
+    "UP046",
+    # Too many arguments - explicitly don't care per requirements
+    "PLR0913",
 ]
 
 fixable = ["ALL"]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 exclude = [
-"load-debug.py",
+    "load-debug.py",
 ]
+
+# Complexity limits - set high but enforce maintainability
+[lint.pylint]
+max-statements = 75  # Limit statements per function (high but not unlimited)
+max-branches = 15  # Limit branches per function
+max-returns = 8  # Limit return statements
+max-locals = 20  # Limit local variables
+max-public-methods = 25  # Limit public methods per class
+max-bool-expr = 6  # Limit boolean expressions in conditions
+max-nested-blocks = 6  # Limit nesting depth
+
+[lint.per-file-ignores]
+"tests/**/*.py" = ["PLR2004", "PLC0415"]  # Allow magic numbers and imports outside toplevel in tests
+"test_*.py" = ["PLR2004", "PLC0415"]  # Allow magic numbers and imports outside toplevel in tests
+
 [analyze]
 detect-string-imports = true
+
 [lint.isort]
 known-first-party = ["antgent"]
 known-third-party = ["agents"]

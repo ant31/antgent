@@ -22,7 +22,7 @@ async def track_step(name: str):
         yield
         return
 
-    new_step = WorkflowStep(name=name)
+    new_step = WorkflowStep(name=name, start_time=datetime.now(tz=None))
     parent_step.children.append(new_step)
     token = _current_step_cv.set(new_step)
 

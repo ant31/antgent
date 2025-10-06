@@ -19,13 +19,20 @@ class WorkflowStepStatus(StrEnum):
     SKIPPED = "skipped"
 
 
+class WorkflowInfo(BaseModel):
+    name: str = Field(default="", description="The name of the agent workflow to run")
+    wid: str = Field(default="", description="The ID of the agent workflow to run")
+    run_id: str = Field(default="", description="The ID of the agent workflow run")
+    namespace: str = Field(default="", description="The namespace of the agent workflow run")
+
+
 class WorkflowStep(BaseModel):
     """Represents a single step in a workflow execution graph."""
 
     id: str = Field(default="")
     name: str = Field(default="", description="The name of the workflow step")
     status: WorkflowStepStatus = Field(default=WorkflowStepStatus.PENDING)
-    start_time: datetime = Field(default_factory=datetime.now)
+    start_time: datetime | None = None
     end_time: datetime | None = None
     children: list["WorkflowStep"] = Field(default_factory=list)
     metadata: dict[str, str] = Field(default_factory=dict)

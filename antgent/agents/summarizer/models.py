@@ -33,7 +33,10 @@ class SummaryGrade(GradeFeedback):
 class SummaryOutput(BaseModel):
     short_version: str = Field(
         ...,
-        description="The shorter version but accurate and exaustive of the original text. In Markdown format with clear headings and paragraphs",
+        description=(
+            "The shorter version but accurate and exaustive of the original text. "
+            "In Markdown format with clear headings and paragraphs"
+        ),
     )
     description: str = Field(..., description="A short description of the content, 1 to 3 sentences")
     title: str = Field(..., description="Title for the table of contents.")

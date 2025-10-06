@@ -2,7 +2,7 @@
   <h1>🐜 AntGent</h1>
   <p><strong>Build Fault-Tolerant, Multi-LLM Agentic Workflows with Temporal</strong></p>
 
-  [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://python.org)
+  [![Python Version](https://img.shields.io/badge/python-3.13%2B-blue.svg)](https://python.org)
   [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
   [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
   [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -38,13 +38,74 @@ AntGent is structured in distinct layers, promoting separation of concerns and m
 3.  **Agent Layer**: Contains the core AI logic. Agents encapsulate a specific task, managing prompts, interacting with LLMs, and parsing the output.
 4.  **Configuration Layer**: A centralized, Pydantic-based configuration system allows you to manage settings for all components (Temporal, LLMs, server, etc.) through YAML files and environment variables.
 
-## 🚀 Getting Started
+## 🚀 Getting Started (Docker)
+
+The easiest way to get AntGent running for development is with Docker. This setup gives you a one-command environment with the API server, Temporal worker, Temporal server, and an S3-compatible service (LocalStack).
 
 ### Prerequisites
 
--   Python 3.12+
--   A running [Temporal Server](https://docs.temporal.io/self-hosted-guide/run-temporal). The easiest way to get started is with `temporal server start-dev`.
--   Access to an LLM provider (e.g., an OpenAI API key).
+-   [Docker](https://www.docker.com/products/docker-desktop/) and [Docker Compose](https://docs.docker.com/compose/install/).
+
+### 1. Configuration
+
+1.  **Set up environment variables:**
+    ```bash
+    cp .env.docker.example .env.docker
+    ```
+    Now, open `.env.docker` and add your LLM provider API key (e.g., `ANTGENT_LLMS__LITELLM__API_KEY`).
+
+2.  **Create a local configuration file:**
+    Create a `localconfig.yaml` file. You can start with the example below. The Docker setup automatically configures Temporal and S3 connections via environment variables, so you don't need to specify them here.
+
+    **Example `localconfig.yaml`:**
+    ```yaml
+    # LLM provider configuration (API key is set in .env.docker)
+    llms:
+      litellm:
+        api_key: "will-be-overridden-by-env"
+
+    # Model aliases
+    aliases:
+      root:
+        "default-summarizer": "gemini/gemini-1.5-pro-latest"
+        "fast-summarizer": "groq/llama3-8b-8192"
+
+    # Agent-specific configurations
+    agents:
+      root:
+        SummaryAgent:
+          model: "default-summarizer" # Use an alias
+    ```
+
+### 2. Run the Services
+
+Start all services with a single command:
+
+```bash
+docker-compose up --build
+```
+
+The following services will be available:
+-   **API Server**: `http://127.0.0.1:8000` (with hot-reloading on code changes)
+-   **API Docs**: `http://127.0.0.1:8000/docs`
+-   **Temporal Web UI**: `http://127.0.0.1:8233`
+-   **LocalStack S3**: `http://localhost:4566`
+
+### 3. Usage Example
+
+With the services running, you can now follow the [Usage Example](#-usage-example-text-summarization) below.
+
+---
+
+## 🚀 Getting Started (Local Setup)
+
+If you prefer to run services manually without Docker, follow these steps.
+
+### Prerequisites
+
+-   Python 3.13+
+-   A running [Temporal Server](https://docs.temporal.io/self-hosted-guide/run-temporal).
+-   Access to an LLM provider.
 
 ### 1. Installation
 
@@ -59,10 +120,7 @@ uv sync -d
 
 ### 2. Configuration
 
-AntGent uses a YAML file for configuration. Copy the example and customize it for your environment:
-
-1.  Create a `localconfig.yaml` file.
-2.  Configure your Temporal server address and LLM API keys.
+Create a `localconfig.yaml` file and configure your Temporal server address and LLM API keys.
 
 **Example `localconfig.yaml`:**
 ```yaml
@@ -70,42 +128,30 @@ AntGent uses a YAML file for configuration. Copy the example and customize it fo
 temporalio:
   host: "127.0.0.1:7233"
   namespace: "default"
-  workers:
-    - name: "antgent-workflow"
-      queue: "antgent-queue"
-      workflows:
-        - "antgent.workflows.summarizer:TextSummarizerWorkflow"
-    - name: "antgent-activities"
-      queue: "antgent-queue-activity"
-      activities:
-        - "antgent.workflows.summarizer:run_summarizer_activity"
 
-# LLM provider configuration (using litellm)
+# LLM provider configuration
 llms:
   litellm:
     api_key: "sk-..." # Your OpenAI key, for example
-  # You can define aliases for models
+
+# Model aliases
 aliases:
   root:
     "default-summarizer": "gemini/gemini-1.5-pro-latest"
-    "fast-summarizer": "groq/llama3-8b-8192"
 
-# Agent-specific configurations can override defaults
+# Agent-specific configurations
 agents:
   root:
     SummaryAgent:
-      model: "default-summarizer" # Use the alias
+      model: "default-summarizer"
 ```
 
 ### 3. Run the Services
-
-You need to run two separate processes: the Temporal Worker and the API Server.
 
 **Terminal 1: Start the Temporal Worker**
 ```bash
 uv run antgent looper --config=localconfig.yaml
 ```
-This worker listens for tasks on the queues defined in your config and executes your workflows and activities.
 
 **Terminal 2: Start the API Server**
 ```bash

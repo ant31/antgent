@@ -4,7 +4,7 @@ import pathlib
 import tempfile
 from typing import Literal
 
-from fpdf import FPDF
+from fpdf import FPDF  # type: ignore
 from openai.types.responses import EasyInputMessageParam, ResponseInputFileParam
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def text_to_pdf(text: str) -> bytes:
 
 
 def text_to_pdf_message(
-    text: str, role: Literal["user", "assistant", "developer", "system"] = "user"
+    text: str, role: Literal["user", "assistant", "developer", "system"] = "user", filename: str = ""
 ) -> EasyInputMessageParam:
     """
     Converts a string of text (plain or Markdown) to a PDF and wraps it in an EasyInputMessageParam.
@@ -50,10 +50,16 @@ def text_to_pdf_message(
 
     byte_content = text_to_pdf(text)
     content_b64 = base64.b64encode(byte_content).decode("utf-8")
+    if not filename:
+        filename = "file.pdf"
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False, delete_on_close=False) as temp_file:
         temp_file.write(byte_content)
-        logger.info(f"PDF file created at {temp_file.name}")
+        logger.info("PDF file created at %s", temp_file.name)
     return EasyInputMessageParam(
         role=role,
-        content=[ResponseInputFileParam(type="input_file", file_data=f"data:application/pdf;base64,{content_b64}")],
+        content=[
+            ResponseInputFileParam(
+                type="input_file", file_data=f"data:application/pdf;base64,{content_b64}", filename=filename
+            )
+        ],
     )

@@ -14,7 +14,8 @@ Provide a summary of the content that is short, concise, and to the point.
 Format the summary as a Markdown document.
 
 The description should be a short paragraph, 1 to 3 sentences, that gives an overview of the content.
-For example, if we receive a long text but the main point is that the person agree to a deal, the description should be something like:
+For example, if we receive a long text but the main point is that the person agree to a deal,
+the description should be something like:
  - "The person agreed to the deal with the company"
 Then the summary should be a short version of the text, that is accurate but concise for efficient reading.
 
@@ -25,7 +26,8 @@ All summary must be in the language mentioned by the user.
 
 Avoid long sentences and redundant information.
 For example:
-- "the text is about the agreement with the company"  is not a good description, but "The person agreed to the deal with the company" is a good description.
+- "the text is about the agreement with the company"  is not a good description,
+  but "The person agreed to the deal with the company" is a good description.
 "In The text...." or "In the document...."  or "In the email..." is not good, go directly to the point.
 
 

@@ -1,8 +1,8 @@
 from antgent.agents.summarizer.models import SummaryInput
-from antgent.models.agent import AgentWorkflowInput
+from antgent.models.agent import AgentInput
 
 
 class TextSummarizerWorkflowContext(SummaryInput): ...
 
 
-class AgentTextSummarizerWorkflowCtxInput(AgentWorkflowInput[TextSummarizerWorkflowContext]): ...
+class AgentTextSummarizerWorkflowCtxInput(AgentInput[TextSummarizerWorkflowContext]): ...

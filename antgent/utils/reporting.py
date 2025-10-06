@@ -2,8 +2,53 @@ import io
 from typing import Any
 
 from docx import Document
-from htmldocx import HtmlToDocx
+from docx.document import Document as DocumentClass
+from htmldocx import HtmlToDocx  # type: ignore
 from markdown_it import MarkdownIt
+
+
+def _add_metadata_sections(document: DocumentClass, metadata_sections: dict[str, str]) -> None:
+    """Add metadata sections to document."""
+    for title, content in metadata_sections.items():
+        document.add_heading(title, level=2)
+        document.add_paragraph(content)
+
+
+def _make_header_cells_bold(cells) -> None:
+    """Make all runs in header cells bold."""
+    for cell in cells:
+        for paragraph in cell.paragraphs:
+            for run in paragraph.runs:
+                run.font.bold = True
+
+
+def _add_table_to_document(document: DocumentClass, title: str, table_data: list[dict[str, Any]]) -> None:
+    """Add a single table to the document."""
+    if not table_data:
+        return
+
+    document.add_heading(title, level=2)
+    headers = list(table_data[0].keys())
+    table = document.add_table(rows=1, cols=len(headers))
+    table.style = "Table Grid"
+
+    # Set headers and make them bold
+    hdr_cells = table.rows[0].cells
+    for i, header in enumerate(headers):
+        hdr_cells[i].text = header
+    _make_header_cells_bold(hdr_cells)
+
+    # Add data rows
+    for row_data in table_data:
+        row_cells = table.add_row().cells
+        for i, header in enumerate(headers):
+            row_cells[i].text = str(row_data.get(header, ""))
+
+
+def _add_tables(document: DocumentClass, tables: dict[str, list[dict[str, Any]]]) -> None:
+    """Add all tables to document."""
+    for title, table_data in tables.items():
+        _add_table_to_document(document, title, table_data)
 
 
 def markdown_to_docx_bytes(
@@ -34,33 +79,10 @@ def markdown_to_docx_bytes(
         document.add_heading(metadata_title, level=1)
 
         if metadata_sections:
-            for title, content in metadata_sections.items():
-                document.add_heading(title, level=2)
-                document.add_paragraph(content)
+            _add_metadata_sections(document, metadata_sections)
 
         if tables:
-            for title, table_data in tables.items():
-                if not table_data:
-                    continue
-                document.add_heading(title, level=2)
-
-                headers = list(table_data[0].keys())
-                table = document.add_table(rows=1, cols=len(headers))
-                table.style = "Table Grid"
-
-                hdr_cells = table.rows[0].cells
-                for i, header in enumerate(headers):
-                    cell = hdr_cells[i]
-                    cell.text = header
-                    for paragraph in cell.paragraphs:
-                        for run in paragraph.runs:
-                            run.font.bold = True
-
-                for row_data in table_data:
-                    row_cells = table.add_row().cells
-                    for i, header in enumerate(headers):
-                        cell_value = row_data.get(header, "")
-                        row_cells[i].text = str(cell_value)
+            _add_tables(document, tables)
 
         document.add_page_break()
 
