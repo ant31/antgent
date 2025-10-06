@@ -23,7 +23,8 @@ Provide the feedbacks as json
 "It's missing the date XYZ", "the address was not mentioned"
 ],
 "grade": 6
-"grade_reasoning": "you were missing some information taht could be important, also it was too wordy for a less verbose text"
+"grade_reasoning": "you were missing some information taht could be important, "
+                   "also it was too wordy for a less verbose text"
 
 }
 

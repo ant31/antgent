@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/job", tags=["antgent", "status"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/status", response_model=AsyncResponse)
+@router.post("/status")
 async def status(ar: AsyncResponse, with_result: bool = False) -> AsyncResponse:
     """
     Retrieve the status of the workflow and update the AsyncResponse object.

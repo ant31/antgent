@@ -13,10 +13,11 @@ with workflow.unsafe.imports_passed_through():
 
     from antgent.agents.summarizer.models import SummaryResult
     from antgent.agents.summarizer.summary import SummaryAgent
+    from antgent.aliases import AliasResolver
     from antgent.config import config
     from antgent.models.agent import AgentWorkflowOutput
     from antgent.models.visibility import WorkflowStepStatus
-    from antgent.workflows.base import BaseWorkflow, BaseWorkflowInput
+    from antgent.workflows.base import BaseWorkflow, WorkflowInput
     from antgent.workflows.summarizer.models import TextSummarizerWorkflowContext
 
 logger = logging.getLogger(__name__)
@@ -29,10 +30,12 @@ async def _heartbeat_in_background():
         await asyncio.sleep(30)
 
 
-async def _summarize_logic(ctx: TextSummarizerWorkflowContext) -> SummaryResult:
+async def _summarize_logic(
+    ctx: TextSummarizerWorkflowContext, alias_resolver: AliasResolver | None = None
+) -> SummaryResult:
     """Helper function to run summarization logic."""
     agentsconf = config().agents
-    summarize_agent = SummaryAgent(conf=agentsconf)
+    summarize_agent = SummaryAgent(conf=agentsconf, alias_resolver=alias_resolver)
 
     summary = await summarize_agent.workflow(llm_input="", context=ctx)
     if summary is None:
@@ -43,7 +46,9 @@ async def _summarize_logic(ctx: TextSummarizerWorkflowContext) -> SummaryResult:
 
 
 @activity.defn
-async def run_summarizer_activity(ctx: TextSummarizerWorkflowContext) -> SummaryResult:
+async def run_summarizer_activity(
+    ctx: TextSummarizerWorkflowContext, alias_resolver: AliasResolver | None = None
+) -> SummaryResult:
     """Activity to run the summarizer."""
     heartbeat_task = asyncio.create_task(_heartbeat_in_background())
     try:
@@ -53,7 +58,7 @@ async def run_summarizer_activity(ctx: TextSummarizerWorkflowContext) -> Summary
             metadata={},
             group_id=group_id,
         ):
-            return await _summarize_logic(ctx)
+            return await _summarize_logic(ctx, alias_resolver)
     finally:
         heartbeat_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
@@ -62,11 +67,8 @@ async def run_summarizer_activity(ctx: TextSummarizerWorkflowContext) -> Summary
 
 @workflow.defn
 class TextSummarizerWorkflow(BaseWorkflow[TextSummarizerWorkflowContext, SummaryResult]):
-    def __init__(self) -> None:
-        super().__init__()
-
     @workflow.run
-    async def run(self, data: BaseWorkflowInput[TextSummarizerWorkflowContext]) -> AgentWorkflowOutput[SummaryResult]:
+    async def run(self, data: WorkflowInput[TextSummarizerWorkflowContext]) -> AgentWorkflowOutput[SummaryResult]:
         self._init_run(data)
         ctx = data.agent_input.context
         self._update_status("Input Processing", WorkflowStepStatus.COMPLETED)
@@ -75,12 +77,12 @@ class TextSummarizerWorkflow(BaseWorkflow[TextSummarizerWorkflowContext, Summary
         try:
             result = await workflow.execute_activity(
                 run_summarizer_activity,
-                ctx,
+                args=[ctx, self.alias_resolver],
                 start_to_close_timeout=timedelta(minutes=5),
                 heartbeat_timeout=timedelta(minutes=1),
                 retry_policy=RetryPolicy(maximum_attempts=3),
             )
-            self.result = AgentWorkflowOutput(result=result, workflow_info=data.agent_input.wid)
+            self.result = AgentWorkflowOutput(result=result, workflow_info=data.wid)
             self._update_status("Summarizing Text", WorkflowStepStatus.COMPLETED)
             self._update_status("Workflow End", WorkflowStepStatus.COMPLETED)
             return self.result

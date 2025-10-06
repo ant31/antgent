@@ -158,7 +158,7 @@ import uuid
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from temporalio.client import Client
-from antgent.models.agent import AgentWorkflowInput, WorkflowInfo
+from antgent.models.agent import AgentInput, WorkflowInfo
 from antgent.temporal.client import tclient
 from antgent.server.api.utils import get_workflow_queue
 # Import your workflow class and context model
@@ -173,8 +173,8 @@ async def run_doc_processor(ctx: DocProcessorCtx) -> dict[str, str]:
     client = await tclient()
     workflow_id = f"doc-processor-{uuid.uuid4().hex}"
 
-    agent_input = AgentWorkflowInput[DocProcessorCtx](
-        context=ctx, wid=WorkflowInfo(wid=workflow_id, name=DocumentProcessorWorkflow.__name__)
+    agent_input = AgentInput[DocProcessorCtx](
+        context=ctx
     )
 
     queue = get_workflow_queue()

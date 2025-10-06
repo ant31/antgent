@@ -23,6 +23,7 @@ app = typer.Typer(no_args_is_help=True)
 )
 def looper_wrapper(  # pylint: disable=too-many-arguments
     ctx: typer.Context,
+    *,
     config_path: Annotated[
         Path | None,
         typer.Option(

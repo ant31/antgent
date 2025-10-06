@@ -2,9 +2,9 @@ import io
 import logging
 from typing import Any
 
-import openpyxl
+import openpyxl  # type: ignore
 from fastapi import HTTPException, UploadFile
-from openpyxl import Workbook
+from openpyxl import Workbook  # type: ignore
 from pydantic import BaseModel, ValidationError
 
 logger = logging.getLogger(__name__)
@@ -56,10 +56,10 @@ def parse_excel_to_models[T: BaseModel](file: UploadFile, model_cls: type[T]) ->
 
         return [model_cls.model_validate(item) for item in raw_table]
     except ValidationError as e:
-        logger.error(f"Pydantic validation failed during Excel parsing: {e}", exc_info=True)
+        logger.error("Pydantic validation failed during Excel parsing: %s", e, exc_info=True)
         raise HTTPException(status_code=400, detail=f"Excel data does not match expected schema: {e}") from e
     except Exception as e:
-        logger.error(f"Failed to parse Excel file: {e}", exc_info=True)
+        logger.error("Failed to parse Excel file: %s", e, exc_info=True)
         raise HTTPException(status_code=400, detail=f"Failed to parse Excel file: {e}") from e
 
 

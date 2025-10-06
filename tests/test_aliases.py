@@ -1,6 +1,6 @@
 import pytest
 
-from antgent.utils.aliases import AliasResolver
+from antgent.aliases import AliasResolver
 
 # --- Pytest Tests (Adjusted for the updated resolve logic) ---
 
@@ -106,7 +106,11 @@ def test_resolve_alias_name_not_string(base_resolver):
     ({"a": "b", "b": "a"}, "a", "a -> b -> a"),
     ({"a": "b", "b": "c", "c": "a"}, "a", "a -> b -> c -> a"),
     ({"x": "y_key", "y_key": "z_key", "z_key": "x"}, "x", "x -> y_key -> z_key -> x"),
-    ({"start_node": "node1", "node1": "node2", "node2": "node3", "node3": "node1"}, "start_node", "start_node -> node1 -> node2 -> node3 -> node1"),
+    (
+        {"start_node": "node1", "node1": "node2", "node2": "node3", "node3": "node1"},
+        "start_node",
+        "start_node -> node1 -> node2 -> node3 -> node1",
+    ),
 ])
 def test_resolve_circular_dependency(empty_resolver, loop_setup, problematic_alias, expected_loop_path_str):
     resolver = empty_resolver

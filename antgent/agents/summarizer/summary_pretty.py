@@ -4,46 +4,7 @@ from antgent.agents.summarizer.summary import SummaryAgent
 from antgent.agents.summarizer.summary_judge import SummaryJudgeAgent
 from antgent.models.agent import AgentConfig, AgentFrozenConfig, PrepareRun, TLLMInput
 
-from .models import SummaryGrade, SummaryGradeCtx, SummaryOutput
-
-PROMPT = """
-You are a professional summarizer.
-
-The reader of the summary are busy people who want to get the gist of the content quickly.
-They already know most of the context, such as parties involved. There's no need to explain the context.
-Provide a summary of the content that is short, concise, and to the point.
-Format the summary as a Markdown document.
-
-The description should be a short paragraph, 1 to 3 sentences, that gives an overview of the content.
-For example, if we receive a long text but the main point is that the person agree to a deal, the description should be something like:
- - "The person agreed to the deal with the company"
-Then the summary should be a short version of the text, that is accurate but concise for efficient reading.
-
-If the reader wants to know more, they can read the original text easily.
-The summary can be up to few paragraphs long, but no more than that.
-
-All summary must be in the language mentioned by the user.
-
-Avoid long sentences and redundant information.
-For example:
-- "the text is about the agreement with the company"  is not a good description, but "The person agreed to the deal with the company" is a good description.
-"In The text...." or "In the document...."  or "In the email..." is not good, go directly to the point.
-
-
-# Output Format
-
-Produce a json output
-fields are:
-    short_version: str = Field(..., description="The summary. in Markdown format with clear headings and paragraphs")
-    description: str = Field(..., description="A short description of the content, 1 to 3 sentences")
-    title: str = Field(..., description="Title for the table of contents.")
-    language: str = Field(...,
-                          description="The language of the original text. E.g., 'en' for English. 'de' for German.",
-                          examples=["en", 'de', 'fr'])
-
-    tags: list[str] = Field(default_factory=list, description="List of tags for indexing")
-
-"""
+from .models import SummaryGrade, SummaryGradeCtx
 
 PROMPT_JUDGE: str = """
 You are a professional reviewer of summaries.
@@ -67,7 +28,6 @@ Provide the feedbacks as json
 
 class SummaryPrettyAgent(SummaryAgent):
     name_id = "SummaryPretty"
-    agent_config = AgentFrozenConfig(output_cls=SummaryOutput, structured=True)
     default_config = AgentConfig(
         name="SummaryPretty",
         client="litellm",
@@ -77,9 +37,6 @@ class SummaryPrettyAgent(SummaryAgent):
             tool_choice="none",
         ),
     )
-
-    def prompt(self):
-        return PROMPT
 
 
 class SummaryPrettyJudgeAgent(SummaryJudgeAgent):

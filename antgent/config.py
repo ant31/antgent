@@ -18,8 +18,8 @@ from temporalloop.config import TemporalSettings as TemporalConfigSchema
 from temporalloop.config import WorkerSettings as WorkerConfigSchema
 from temporalloop.schedule import Schedule as TemporalScheduleSchema
 
-from antgent.models.agent import AgentConfig, AgentsConfigSchema, LLMsConfigSchema
-from antgent.utils.aliases import AliasResolver
+from antgent.aliases import AliasResolver
+from antgent.models.agent import AgentConfig, AgentsConfigSchema, LLMsConfigSchema, ModelProvidersConfig
 
 LOGGING_CONFIG: dict[str, Any] = ant31box.config.LOGGING_CONFIG
 LOGGING_CONFIG["loggers"].update({"antgent": {"handlers": ["default"], "level": "INFO", "propagate": False}})
@@ -133,6 +133,10 @@ class ConfigSchema(ant31box.config.ConfigSchema):
     name: str = Field(default="antgent")
     aliases: AliasesSchema = Field(default_factory=AliasesSchema)
     llms: LLMsConfigSchema = Field(default_factory=LLMsConfigSchema)
+    model_providers: ModelProvidersConfig = Field(
+        default_factory=ModelProvidersConfig,
+        description="Provider-specific configuration mappings for models",
+    )
     logging: LoggingConfigSchema = Field(default_factory=LoggingCustomConfigSchema, exclude=True)
     temporalio: TemporalCustomConfigSchema = Field(default_factory=TemporalCustomConfigSchema, exclude=False)
     schedules: dict[str, TemporalScheduleSchema] = Field(default_factory=dict, exclude=False)
@@ -204,6 +208,10 @@ class AntgentConfig(Generic[TConfigSchema], GenericConfig[TConfigSchema]):
     @property
     def s3(self) -> S3ConfigSchema:
         return self.conf.s3
+
+    @property
+    def model_providers(self) -> ModelProvidersConfig:
+        return self.conf.model_providers
 
 
 class Config(AntgentConfig[ConfigSchema]):

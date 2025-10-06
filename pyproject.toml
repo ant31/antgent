@@ -1,6 +1,6 @@
 [project]
 name = "antgent"
-version = "0.8.5"
+version = "0.10.2"
 description = ""
 authors = [{ name = "ant31", email = "2t.antoine@gmail.com" }]
 requires-python = ">=3.12,<4"
@@ -61,6 +61,7 @@ dev = [
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.30",
     "mkdocs-include-markdown-plugin>=7.1.3",
+    "mypy>=1.18.2",
 ]
 
 [build-system]
@@ -82,7 +83,7 @@ skip_gitignore = true
 testpaths = "tests/"
 
 [tool.bumpversion]
-current_version = "0.8.5"
+current_version = "0.10.2"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
@@ -106,3 +107,35 @@ regex = true
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.mypy]
+strict = true
+disallow_incomplete_defs = false
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+
+
+[tool.coverage.report]
+show_missing = true
+sort = "-Cover"
+exclude_also = [
+    # This is only executed while typechecking
+    "if TYPE_CHECKING:",
+    "@abc.abstractmethod",
+    "raise NotImplementedError",
+    "logger.debug",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+filterwarnings = [
+    # This is a warning that is expected to happen: we have an async filter that raises an exception
+    "ignore:coroutine 'test_async_input_filter_fails.<locals>.invalid_input_filter' was never awaited:RuntimeWarning",
+]
+markers = [
+    "allow_call_model_methods: mark test as allowing calls to real model implementations",
+]
+
+[tool.inline-snapshot]
+format-command = "ruff format --stdin-filename {filename}"

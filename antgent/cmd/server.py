@@ -15,12 +15,12 @@ logger = logging.getLogger("ant31box.info")
 
 
 class LogLevel(str, enum.Enum):
-    critical = "critical"
-    error = "error"
-    warning = "warning"
-    info = "info"
-    debug = "debug"
-    trace = "trace"
+    CRITICAL = "critical"
+    ERROR = "error"
+    WARNING = "warning"
+    INFO = "info"
+    DEBUG = "debug"
+    TRACE = "trace"
 
 
 # pylint: disable=no-value-for-parameter
@@ -58,7 +58,7 @@ def server(  # server_wrapper
             show_default=True,
             case_sensitive=False,
         ),
-    ] = LogLevel.info,
+    ] = LogLevel.INFO,
     log_config: Annotated[
         Path | None,
         typer.Option(
@@ -70,9 +70,9 @@ def server(  # server_wrapper
     ] = None,
 ) -> None:
     _config = confload(str(config) if config else None)
-    if host:
+    if host is not None:
         _config.server.host = host
-    if port:
+    if port is not None:
         _config.server.port = port
     if temporal_host:
         _config.temporalio.host = temporal_host
@@ -82,9 +82,6 @@ def server(  # server_wrapper
         _config.logging.log_config = str(log_config)
     if use_colors is not None:
         _config.logging.use_colors = use_colors
-    if host:
-        _config.conf.server.host = host
-
     logger.info("Starting server")
     typer.echo(f"{_config.server.model_dump()}")
     init(_config.conf, mode="server")

@@ -71,7 +71,7 @@ pylint:
 pyright:
 	uv run pyright
 
-lint: format-test isort-check ruff uv-check
+lint: format-test isort-check ruff uv-check pylint
 small-check: format-test isort-check uv-check
 check: lint pyright
 
@@ -103,7 +103,7 @@ ruff:
 	uv run ruff check
 
 fix: format isort
-	uv run ruff check --fix
+	uv run ruff check --fix --unsafe-fixes
 
 .ONESHELL:
 pyrightconfig:

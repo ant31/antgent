@@ -5,12 +5,11 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from temporalio.client import Client
 
-from antgent.models.agent import AgentTextSummaryWorkflowInput, AgentWorkflowInput, WorkflowInfo
+from antgent.models.visibility import WorkflowInfo
 from antgent.temporal.client import tclient
-from antgent.workflows.base import BaseWorkflowInput
+from antgent.workflows.base import WorkflowInput
 from antgent.workflows.summarizer import TextSummarizerWorkflow
 from antgent.workflows.summarizer.models import (
-    AgentTextSummarizerWorkflowCtxInput,
     TextSummarizerWorkflowContext,
 )
 
@@ -50,28 +49,29 @@ async def _get_workflow_status(workflow_id: str) -> dict:
         # Fallback for older workflows that might fail on progress query
         return {
             "status_timeline": [("Query", "failed")],
-            "error": f"Failed to query workflow progress, it might be an older version. Status is {describe.status.name}.",
+            "error": (
+                f"Failed to query workflow progress, it might be an older version. Status is {describe.status.name}."
+            ),
             "workflow_id": workflow_id,
         }
 
 
 @router.post("/summarizer")
 async def run_summarizer(
-    ctx: AgentTextSummaryWorkflowInput,
+    workflow_input: WorkflowInput[TextSummarizerWorkflowContext],
 ) -> dict[str, str]:
     """Starts a text summarizer workflow and returns the workflow ID."""
-    context = TextSummarizerWorkflowContext(**ctx.context.model_dump())
-
     client = await tclient()
     workflow_id = f"summarizer-{uuid.uuid4().hex}"
-    agent_input = AgentWorkflowInput[TextSummarizerWorkflowContext](
-        context=context, wid=WorkflowInfo(wid=workflow_id, name=TextSummarizerWorkflow.__name__)
-    )
+
+    # Set the workflow info
+    workflow_input.wid = WorkflowInfo(wid=workflow_id, name=TextSummarizerWorkflow.__name__)
+
     queue = get_workflow_queue()
-    input_data = BaseWorkflowInput[TextSummarizerWorkflowContext](agent_input=agent_input)
+
     await client.start_workflow(
         TextSummarizerWorkflow.run,
-        input_data,
+        workflow_input,
         id=workflow_id,
         task_queue=queue,
     )
@@ -87,18 +87,21 @@ async def summarizer_status(workflow_id: str) -> dict:
 
 @router.post("/summarizer/retrigger")
 async def summarizer_retrigger_api(
-    ctx: AgentTextSummarizerWorkflowCtxInput,
+    workflow_input: WorkflowInput[TextSummarizerWorkflowContext],
 ) -> dict[str, str]:
-    """Retriggers a TextSummarizerWorkflow with the same input and returns the new workflow_id."""
+    """Retriggers a TextSummarizerWorkflow and returns the new workflow_id."""
     client: Client = await tclient()
     workflow_id = f"summarizer-{uuid.uuid4().hex}"
-    ctx.wid = WorkflowInfo(wid=workflow_id, name=TextSummarizerWorkflow.__name__)
+
+    workflow_input.wid = WorkflowInfo(wid=workflow_id, name=TextSummarizerWorkflow.__name__)
+
     queue = get_workflow_queue()
-    input_data = BaseWorkflowInput[TextSummarizerWorkflowContext](agent_input=ctx)
+
     await client.start_workflow(
         TextSummarizerWorkflow.run,
-        input_data,
+        workflow_input,
         id=workflow_id,
         task_queue=queue,
     )
+
     return {"workflow_id": workflow_id}

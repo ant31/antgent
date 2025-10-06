@@ -2,15 +2,16 @@
 import base64
 import logging
 import os
-from typing import Literal
+from typing import Any, Literal
 
 import litellm
 import logfire
 from agents import set_trace_processors, set_tracing_export_api_key
 
+from antgent.agents.base import BaseAgent
+from antgent.aliases import Aliases
 from antgent.config import ConfigSchema, LangfuseConfigSchema, LogfireConfigSchema
 from antgent.models.agent import LLMConfigSchema
-from antgent.utils.aliases import Aliases
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +24,13 @@ def init_envs_langfuse(config: LangfuseConfigSchema):
     os.environ["LANGFUSE_HOST"] = os.environ.get("LANGFUSE_HOST", config.endpoint)
 
     # Build Basic Auth header.
-    LANGFUSE_AUTH = base64.b64encode(
+    langfuse_auth = base64.b64encode(
         f"{os.environ.get('LANGFUSE_PUBLIC_KEY')}:{os.environ.get('LANGFUSE_SECRET_KEY')}".encode()
     ).decode()
 
     # Configure OpenTelemetry endpoint & headers
     os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = f"{os.environ['LANGFUSE_HOST']}/api/public/otel"
-    os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {LANGFUSE_AUTH}"
+    os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {langfuse_auth}"
 
 
 def set_env_llm(config: LLMConfigSchema | None, prefix: str | None):
@@ -38,10 +39,12 @@ def set_env_llm(config: LLMConfigSchema | None, prefix: str | None):
     if not prefix:
         prefix = config.name.upper()
     up = prefix.upper()
+
     os.environ[f"{up}_API_KEY"] = os.environ.get(f"{up}_API_KEY", config.api_key)
+    logger.info("Setting %s_API_KEY %s", up, len(config.api_key))
     url = os.environ.get(f"{up}_API_BASE", config.url)
-    logger.info(f"Setting {up}_API_BASE to {url}")
     if url:
+        logger.info("Setting %s_API_BASE to %s", up, url)
         os.environ[f"{up}_API_BASE"] = url
 
 
@@ -54,8 +57,10 @@ def init_envs_llm(config: ConfigSchema):
         logger.info("Using litellm proxy")
         litellm.use_litellm_proxy = True
         os.environ["USE_LITELLM_PROXY"] = os.environ.get("USE_LITELLM_PROXY", "True")
-    for _, conf in config.llms.llms.items():
-        set_env_llm(config=conf, prefix=conf.name)
+    for name, conf in config.llms.llms.items():
+        n = conf.name if conf.name else name
+
+        set_env_llm(config=conf, prefix=n)
     set_tracing_export_api_key("")
 
 
@@ -84,10 +89,17 @@ def init_logfire(config: LogfireConfigSchema, mode: Literal["server", "worker"] 
         )
 
 
-def init(config: ConfigSchema, env: str = "dev", mode: Literal["server", "worker"] = "server", extra=None):
+def init(
+    config: ConfigSchema,
+    env: str = "dev",
+    mode: Literal["server", "worker"] = "server",
+    extra: dict[str, Any] | None = None,
+):
     if not extra:
         extra = {}
     extra["env"] = env
+    BaseAgent.llms_conf = config.llms
+    BaseAgent.provider_config = config.model_providers
     init_aliases(config)
     init_envs(config)
     set_trace_processors([])

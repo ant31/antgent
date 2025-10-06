@@ -22,8 +22,9 @@ def main() -> None:
     app.add_typer(worker_app)
 
     # Add other commands
-    app.add_typer(version_app)
+
     app.add_typer(server_app)
+    app.add_typer(version_app)
     app.add_typer(default_config_app)
     app.command()(tikcount)
 
