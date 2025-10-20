@@ -17,6 +17,7 @@ def openai_client(project_name: str = "openai", llms: LLMsConfigSchema | None = 
     use openai.cache_clear() to clear the cache
     """
     import logfire  # noqa: PLC0415
+    from antgent.config import config  # noqa: PLC0415
 
     if llms is None:
         llms = config().llms
@@ -43,6 +44,7 @@ def openai_aclient(project_name: str = "openai", llms: LLMsConfigSchema | None =
     use openai.cache_clear() to clear the cache
     """
     import logfire  # noqa: PLC0415
+    from antgent.config import config  # noqa: PLC0415
 
     if llms is None:
         llms = config().llms
@@ -68,6 +70,8 @@ def genai_client(project_name: str = "gemini", llms: LLMsConfigSchema | None = N
     It cache the answer for the same api_key
     use genai.cache_clear() to clear the cache
     """
+    from antgent.config import config  # noqa: PLC0415
+
     if llms is None:
         llms = config().llms
 
@@ -84,6 +88,8 @@ def s3_client(bucket: str = "", prefix: str = "", key: str = "") -> S3Client:
     It cache the answer for the same key
     use dhl_client.cache_clear() to clear the cache
     """
+    from antgent.config import config  # noqa: PLC0415
+
     _ = key
     if not bucket:
         bucket = config().s3.bucket
@@ -99,6 +105,8 @@ def filedl_client(key: str = "") -> DownloadClient:
     It caches the answer for the same key.
     Use filedl_client.cache_clear() to clear the cache.
     """
+    from antgent.config import config  # noqa: PLC0415
+
     _ = key
     client = DownloadClient()
     client.set_s3(config().s3)

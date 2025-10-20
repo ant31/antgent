@@ -8,27 +8,12 @@ import pytest
 from temporalio import activity
 from temporalio.client import Client
 from temporalio.testing import ActivityEnvironment
-from temporalio.worker import SandboxConfig, Worker
+from temporalio.worker import Worker
 
 from antgent.temporal.activities import AnyData, aecho, echo
 from antgent.temporal.workflows.echo import EchoAsyncWorkflow, EchoWorkflow
 
 logger = logging.getLogger(__name__)
-
-sandbox_config = SandboxConfig(
-    passthrough_modules=[
-        "litellm",
-        "ant31box",
-        "aioboto3",
-        "boto3",
-        "botocore",
-        "urllib3",
-        "google",
-        "openai",
-        "http",
-        "urllib",
-    ]
-)
 
 # A list of tuples where each tuple contains:
 # - The activity function
@@ -59,7 +44,6 @@ async def test_echo_workflow(client: Client):
         workflows=[EchoWorkflow],
         activities=[echo],
         activity_executor=ThreadPoolExecutor(10),
-        sandbox_config=sandbox_config,
     ):
         assert (await client.execute_workflow(
             EchoWorkflow.run,
@@ -79,7 +63,6 @@ async def test_aecho_workflow(client: Client):
         task_queue=task_queue_name,
         workflows=[EchoAsyncWorkflow],
         activities=[aecho],
-        sandbox_config=sandbox_config,
     ):
         res = (await client.execute_workflow(
             EchoAsyncWorkflow.run,
@@ -108,7 +91,6 @@ async def test_mock_activity(client: Client):
         activity_executor=ThreadPoolExecutor(10),
         workflows=[EchoAsyncWorkflow],
         activities=[aecho_mocked],
-        sandbox_config=sandbox_config,
     ):
         assert (await client.execute_workflow(
             EchoAsyncWorkflow.run,

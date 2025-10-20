@@ -5,6 +5,17 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     import antgent  # noqa: F401
+    import ant31box  # noqa: F401
+    import aioboto3  # noqa: F401
+    import boto3  # noqa: F401
+    import botocore  # noqa: F401
+    import google  # noqa: F401
+    import httpx  # noqa: F401
+    import litellm  # noqa: F401
+    import openai  # noqa: F401
+    import urllib  # noqa: F401
+    import urllib3  # noqa: F401
+
 
 from antgent.temporal.activities import AnyData, aecho, echo
 
