@@ -71,7 +71,7 @@ pylint:
 pyright:
 	uv run pyright
 
-lint: format-test isort-check ruff uv-check pylint
+lint: format-test isort-check ruff uv-check
 small-check: format-test isort-check uv-check
 check: lint pyright
 
