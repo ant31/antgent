@@ -17,6 +17,7 @@ def openai_client(project_name: str = "openai", llms: LLMsConfigSchema | None = 
     use openai.cache_clear() to clear the cache
     """
     import logfire  # noqa: PLC0415
+
     from antgent.config import config  # noqa: PLC0415
 
     if llms is None:
@@ -44,6 +45,7 @@ def openai_aclient(project_name: str = "openai", llms: LLMsConfigSchema | None =
     use openai.cache_clear() to clear the cache
     """
     import logfire  # noqa: PLC0415
+
     from antgent.config import config  # noqa: PLC0415
 
     if llms is None:
