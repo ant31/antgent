@@ -4,7 +4,9 @@ from typing import Any
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from antgent.temporal.activities import AnyData, aecho, echo
+    import antgent  # noqa: F401
+
+from antgent.temporal.activities import AnyData, aecho, echo
 
 
 @workflow.defn
