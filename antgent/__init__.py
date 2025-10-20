@@ -7,7 +7,7 @@ from .models.agent import AgentConfig, AgentInput, AgentWorkflowOutput
 from .models.message import Content
 from .workflows.base import BaseWorkflow, WorkflowInput
 
-__version__ = "0.10.2"
+__version__ = "0.11.0"
 
 
 __all__ = [
