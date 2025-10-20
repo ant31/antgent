@@ -50,7 +50,7 @@ class TestContentToMessages:
         assert len(messages) == 1
         assert "input_file" in messages[0]["content"][0]["type"]
 
-    @patch("antgent.models.message.filedl_client")
+    @patch("antgent.clients.filedl_client")
     async def test_url_content_with_s3_pdf(self, mock_filedl_client):
         """Test converting S3 URL content (PDF) to messages."""
         # Mock the file download client
@@ -86,7 +86,7 @@ class TestContentToMessages:
             assert len(messages) == 2
             assert messages[0]["content"] == "## Test Document:\n"
 
-    @patch("antgent.models.message.filedl_client")
+    @patch("antgent.clients.filedl_client")
     async def test_url_content_with_s3_text(self, mock_filedl_client):
         """Test converting S3 URL content (text file) to messages."""
         mock_client = MagicMock()
@@ -116,7 +116,7 @@ class TestContentToMessages:
             assert messages[0]["content"] == "## test.txt:\n"
             assert messages[1]["content"] == "This is text content\n"
 
-    @patch("antgent.models.message.filedl_client")
+    @patch("antgent.clients.filedl_client")
     async def test_url_content_with_http(self, mock_filedl_client):
         """Test converting HTTP URL content to messages."""
         mock_client = MagicMock()
@@ -145,7 +145,7 @@ class TestContentToMessages:
             # Should return messages with the document
             assert len(messages) > 0
 
-    @patch("antgent.models.message.filedl_client")
+    @patch("antgent.clients.filedl_client")
     @patch("antgent.models.message.extract_text_from_bytes")
     async def test_url_content_with_docx(self, mock_extract_text, mock_filedl_client):
         """Test converting S3 URL content (DOCX) to messages."""

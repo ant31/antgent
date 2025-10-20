@@ -10,7 +10,6 @@ from openai.types.responses import EasyInputMessageParam
 from openai.types.responses.response_input_file_param import ResponseInputFileParam
 from pydantic import BaseModel, Field
 
-from antgent.clients import filedl_client
 from antgent.core.text import extract_text_from_bytes
 
 
@@ -31,6 +30,8 @@ class Content(BaseModel):
 
         Returns: (processed_content, mode, mime_type)
         """
+        from antgent.clients import filedl_client  # noqa: PLC0415
+
         dl_client = filedl_client()
         output = io.BytesIO()
 
