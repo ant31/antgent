@@ -1,3 +1,4 @@
+from .config import parse_dynamic_agent_config
 from .content import load_file_to_content
 from .csv import csv_to_nested_dict, list_dict_to_csv
 from .excel import list_dict_to_xlsx_bytes, parse_excel_to_models
@@ -12,6 +13,7 @@ __all__ = [
     "list_dict_to_xlsx_bytes",
     "load_file_to_content",
     "markdown_to_docx_bytes",
+    "parse_dynamic_agent_config",
     "parse_excel_to_models",
     "parse_json_mk",
     "text_to_pdf",

@@ -1,4 +1,4 @@
-from agents import ModelSettings, TResponseInputItem
+from agents import TResponseInputItem
 
 from antgent.agents.base import BaseAgent
 from antgent.models.agent import AgentConfig, AgentFrozenConfig, PrepareRun, TLLMInput
@@ -6,62 +6,64 @@ from antgent.models.agent import AgentConfig, AgentFrozenConfig, PrepareRun, TLL
 from .models import SummaryInput, SummaryOutput
 
 PROMPT = """
-You are a professional summarizer.
+Generate a comprehensive and detailed shorter version of the given text in the same language as the original text.
+Additionally, include a short description, a title for the table of contents, and tags for indexing.
+The shorter version is not a summary but a version that has reduced redundancy in information and rewriting
+sentences using fewer words or characters without changing the essence.
+The short version can't be less than 25% the original size and will be exclusively machine processed by LLM,
+so it's okay if the sentences are not grammatically correct to reduce size.
 
-The reader of the summary are busy people who want to get the gist of the content quickly.
-They already know most of the context, such as parties involved. There's no need to explain the context.
-Provide a summary of the content that is short, concise, and to the point.
-Format the summary as a Markdown document.
+Feedbacks will be provided too. The feedbacks are not part of the text to be summarized, but they are important for
+the context about what was wrong with your previous summary
 
-The description should be a short paragraph, 1 to 3 sentences, that gives an overview of the content.
-For example, if we receive a long text but the main point is that the person agree to a deal,
-the description should be something like:
- - "The person agreed to the deal with the company"
-Then the summary should be a short version of the text, that is accurate but concise for efficient reading.
-
-If the reader wants to know more, they can read the original text easily.
-The summary can be up to few paragraphs long, but no more than that.
-
-All summary must be in the language mentioned by the user.
-
-Avoid long sentences and redundant information.
-For example:
-- "the text is about the agreement with the company"  is not a good description,
-  but "The person agreed to the deal with the company" is a good description.
-"In The text...." or "In the document...."  or "In the email..." is not good, go directly to the point.
-
+# Steps
+1. **Read and Comprehend**: Carefully read the entire text to fully understand its content and context.
+2. **Identify Key Information**: Note down all critical points, important data, and any context that is essential
+   for understanding.
+3. **Preserve Context**: Ensure all critical context is preserved, even if it means including more information
+   rather than less.
+4. **Timeline and Chronology**: The document structure must not be altered. Summarize each paragraph and clearly
+   highlight chronology.
+5. **Rewrite for Brevity**: Rewrite sentences to reduce token count while keeping the original meaning, allowing
+   grammatical flexibility.
+6. **Revise and Verify**: Review the shortened version to ensure no important information is omitted and refine for
+   clarity and coherence. All dates, all numbers all names, all entities must be present in the shorter version
+7. **Language Handling**: Ensure the shorter version is in the same language as the input.
+8. **Additional Content**: Add a short description (2-3 sentences) of the text, a suitable document title for a
+   table of contents, and a list of tags for indexing
 
 # Output Format
 
 Produce a json output
 fields are:
-    short_version: str = Field(..., description="The summary. in Markdown format with clear headings and paragraphs")
-    description: str = Field(..., description="A short description of the content, 1 to 3 sentences")
+    short_version: str = Field(..., description="The shorter version but accurate and exaustive of the original text."
+ " in Markdown format with clear headings and paragraphs")
+    description: str = Field(..., description="A short description of the content, 2-3 sentences")
     title: str = Field(..., description="Title for the table of contents.")
     language: str = Field(...,
                           description="The language of the original text. E.g., 'en' for English. 'de' for German.",
                           examples=["en", 'de', 'fr'])
 
     tags: list[str] = Field(default_factory=list, description="List of tags for indexing")
+
+
+
+# Notes
+
+- When uncertain about the importance of information, include it to preserve the context fully.
+- The most import is to not lose any information. Reducing size is secondary"
+
 """
 
 
 class SummaryAgent(BaseAgent[SummaryInput, SummaryOutput]):
     name_id = "SummaryAgent"
+    agent_config = AgentFrozenConfig(output_cls=SummaryOutput, structured=True, run_kwargs={"max_turns": 1})
     default_config = AgentConfig(
         name="SummaryAgent",
         client="litellm",
-        description="Create a short and concise summary of the content, with a description and title.",
+        description="Summarize the text and provide a shorter version with all the information",
         model="gemini/gemini-pro",
-        model_settings=ModelSettings(
-            tool_choice="none",
-        ),
-    )
-
-    agent_config = AgentFrozenConfig[SummaryOutput, SummaryOutput](
-        output_cls=SummaryOutput,
-        structured=True,
-        structured_cls=SummaryOutput,
     )
 
     def prompt(self) -> str:
@@ -69,6 +71,8 @@ class SummaryAgent(BaseAgent[SummaryInput, SummaryOutput]):
 
     async def prep_input(self, llm_input: TLLMInput, ctx: SummaryInput) -> PrepareRun[SummaryInput]:
         messages: list[TResponseInputItem] = []
+        if ctx.feedbacks:
+            messages.append({"role": "user", "content": f"Previous summary feedbacks: {';'.join(ctx.feedbacks)}\n"})
         messages.append({"role": "user", "content": f"Generate summaries and text in Language: {ctx.to_language}\n"})
         messages.append({"role": "user", "content": f"Original Text:\n{ctx.content}\n"})
         self.add_inputs(llm_input, messages)

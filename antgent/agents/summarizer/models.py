@@ -1,4 +1,13 @@
+from enum import StrEnum
+
 from pydantic import BaseModel, Field
+
+
+class SummaryType(StrEnum):
+    """Enumeration of available summary types. Easy to extend with new types."""
+
+    PRETTY = "pretty"
+    MACHINE = "machine"
 
 
 class SummaryInput(BaseModel):
@@ -9,6 +18,8 @@ class SummaryInput(BaseModel):
     to_language: str = Field(
         "de", description="The language to translate the summary to. E.g., 'en' for English, 'de' for German."
     )
+    summary_type: SummaryType = Field(default=SummaryType.MACHINE, description="The type of summary to generate.")
+    iterations: int = Field(default=1, description="Number of iterations for summarization and grading.")
 
 
 class Entity(BaseModel):
@@ -48,5 +59,31 @@ class SummaryGradeCtx(SummaryOutput):
     original_text: str = Field(..., description="The original text")
 
 
-class SummaryResult(BaseModel):
-    summary: SummaryOutput = Field(..., description="The summary of the content")
+class InternalSummaryResult(BaseModel):
+    """Internal model for a rich summary result, including grading and intermediate steps.
+    This should NOT be exposed directly in API responses."""
+
+    summary: SummaryOutput = Field(..., description="The best summary generated after all iterations.")
+    grades: list[SummaryGrade] = Field(default_factory=list, description="Grading details from each iteration.")
+    summaries: list[SummaryOutput] = Field(
+        default_factory=list, description="All summaries generated during the iterations."
+    )
+    summary_type: SummaryType = Field(..., description="The type of summary that was generated.")
+
+
+class InternalSummariesAllResult(BaseModel):
+    """Internal model holding the full, detailed results for multiple summary types.
+    This is the raw output from the multi-summary workflow."""
+
+    summaries: dict[SummaryType, InternalSummaryResult | None] = Field(
+        default_factory=dict, description="A dictionary mapping each summary type to its detailed internal result."
+    )
+
+
+class SummariesResult(BaseModel):
+    """Clean, public-facing API model for multi-summary results.
+    This model intentionally omits internal details like grades and iterations."""
+
+    summaries: dict[SummaryType, SummaryOutput | None] = Field(
+        default_factory=dict, description="A dictionary mapping each summary type to its final summary output."
+    )

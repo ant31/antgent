@@ -139,3 +139,6 @@ markers = [
 
 [tool.inline-snapshot]
 format-command = "ruff format --stdin-filename {filename}"
+
+# [tool.uv.sources]
+# temporalloop = { path = "../../oss/temporalloop", editable = true }

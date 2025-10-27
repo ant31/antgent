@@ -6,7 +6,7 @@ from agents import (
 from agents.model_settings import ModelSettings
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, RootModel
 
-from antgent.agents.summarizer.models import SummaryInput, SummaryResult
+from antgent.agents.summarizer.models import SummariesResult, SummaryInput, SummaryOutput
 
 from .visibility import Visibility, WorkflowInfo
 
@@ -180,7 +180,10 @@ class AgentInput[TInput](BaseModel):
 AgentWorkflowInput = AgentInput
 
 
-class AgentTextSummaryWorkflowOutput(AgentWorkflowOutput[SummaryResult]): ...
+class AgentTextSummaryWorkflowOutput(AgentWorkflowOutput[SummaryOutput]): ...
+
+
+class AgentTextSummariesWorkflowOutput(AgentWorkflowOutput[SummariesResult]): ...
 
 
 class AgentTextSummaryWorkflowInput(AgentInput[SummaryInput]): ...
