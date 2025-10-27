@@ -1,3 +1,11 @@
-from .workflow import TextSummarizerWorkflow, run_summarizer_activity
+from .text import (
+    TextSummarizerAllWorkflow,
+    TextSummarizerOneTypeWorkflow,
+    run_summarizer_one_type_activity,
+)
 
-__all__ = ["TextSummarizerWorkflow", "run_summarizer_activity"]
+__all__ = [
+    "TextSummarizerAllWorkflow",
+    "TextSummarizerOneTypeWorkflow",
+    "run_summarizer_one_type_activity",
+]

@@ -11,6 +11,7 @@ class AntgentServer(Server):
         "antgent.server.api.job_info:router",
         "antgent.server.api.workflows.list:router",
         "antgent.server.api.workflows.summarizer:router",
+        "antgent.server.api.status:router",
     }
     _middlewares: ClassVar[set[str]] = {"tokenAuth"}
 

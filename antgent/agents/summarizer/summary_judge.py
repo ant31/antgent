@@ -18,13 +18,13 @@ The less verbose text must contains ALL entities, date, place, people, addresses
 
 Provide the feedbacks as json
 {
-"missing_entitites": ["date XYZ"]
-"feebacks": [
+"missing_entities": ["date XYZ"],
+"feedbacks": [
 "It's missing the date XYZ", "the address was not mentioned"
 ],
-"grade": 6
-"grade_reasoning": "you were missing some information taht could be important, "
-                   "also it was too wordy for a less verbose text"
+"grade": 6,
+"grade_reasoning": "you were missing some information that could be important, also it was too wordy for a less"
+ " verbose text"
 
 }
 
@@ -33,7 +33,7 @@ Provide the feedbacks as json
 
 class SummaryJudgeAgent(BaseAgent[SummaryGradeCtx, SummaryGrade]):
     name_id = "SummaryJudge"
-    agent_config = AgentFrozenConfig(output_cls=SummaryGrade, structured=True)
+    agent_config = AgentFrozenConfig(output_cls=SummaryGrade, structured=True, run_kwargs={"max_turns": 1})
     default_config = AgentConfig(
         name="SummaryJudge",
         client="litellm",
