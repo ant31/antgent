@@ -10,5 +10,10 @@ The framework emphasizes a modular and structured development approach. Key comp
 -   **Declarative Workflows**: Workflows are defined as Python code, making it easy to express the logic of agent collaboration.
 -   **Type Safety**: With extensive use of [Pydantic](https://docs.pydantic.dev/), antgent ensures that data flowing through your system is validated and consistent.
 -   **API-First Design**: Built-in integration with [FastAPI](https://fastapi.tiangolo.com/) allows you to quickly expose your agent workflows as robust RESTful API endpoints.
+-   **Multi-Provider Support**: Seamlessly work with multiple LLM providers (OpenAI, Gemini, Anthropic, etc.) through [LiteLLM](https://litellm.ai/) integration.
+
+**Real-World Example:**
+
+The framework includes a production-ready text summarization system that demonstrates these principles in action. It supports multiple summary types (machine-optimized for LLM processing vs. human-readable), iterative refinement with quality grading, and both synchronous and asynchronous API patterns. This serves as both a useful tool and a reference implementation for building your own workflows.
 
 antgent is ideal for developers and teams looking to move beyond simple, single-prompt AI applications and build sophisticated systems that can reason, plan, and execute complex tasks reliably.

@@ -9,6 +9,8 @@ antgent is a powerful Python framework for building and orchestrating AI agent w
     *   [Key Features](introduction/key-features.md)
     *   [Core Concepts](introduction/core-concepts.md)
 *   **Release Notes**
+    *   [What's New in v0.12.0](whatsnew/2025-10-28-updates.md) ⭐
+    *   [What's New in v0.11.0](whatsnew/2025-10-10-updates.md)
     *   [Changelog](changelog.md)
     *   [Migration Guide](migration.md)
 *   **Engineering Guides**

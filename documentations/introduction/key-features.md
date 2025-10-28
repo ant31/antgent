@@ -13,3 +13,9 @@ antgent is packed with features designed to make building and managing AI agent 
 -   **Built-in Observability**: Workflows and agents are automatically instrumented for logging and tracing. This gives you deep visibility into your system's execution, making it easier to debug issues and monitor performance.
 
 -   **Flexible Configuration**: A unified configuration system allows you to manage settings for your application, agents, third-party services, and infrastructure all in one place. It supports environment variables for easy deployment across different environments (development, staging, production).
+
+-   **Multiple Execution Patterns**: Support for both synchronous (blocking, wait for result) and asynchronous (non-blocking, returns workflow ID) API patterns, allowing you to choose the best approach for your use case.
+
+-   **Iterative Refinement**: Built-in support for multi-iteration workflows where agents can refine their outputs based on quality grading and feedback, producing progressively better results.
+
+-   **Multi-Type Outputs**: Framework support for generating multiple variations of outputs optimized for different use cases (e.g., machine-readable vs. human-readable formats) from a single workflow execution.
