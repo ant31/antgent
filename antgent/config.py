@@ -100,7 +100,7 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                 activities=[
                     "antgent.temporal.activities:echo",
                     "antgent.temporal.activities:aecho",
-                    "antgent.workflows.summarizer:run_summarizer_activity",
+                    "antgent.workflows.summarizer:run_summarizer_one_type_activity",
                 ],
             ),
             WorkerConfigSchema(
@@ -109,7 +109,8 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                 workflows=[
                     "antgent.temporal.workflows.echo:EchoWorkflow",
                     "antgent.temporal.workflows.echo:EchoAsyncWorkflow",
-                    "antgent.workflows.summarizer:TextSummarizerWorkflow",
+                    "antgent.workflows.summarizer:TextSummarizerOneTypeWorkflow",
+                    "antgent.workflows.summarizer:TextSummarizerAllWorkflow",
                 ],
             ),
         ],
