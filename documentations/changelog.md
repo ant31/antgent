@@ -2,6 +2,33 @@
 
 This document records the major changes for each version of the `antgent` framework.
 
+## Version 0.12.0
+
+This release introduces a comprehensive redesign of the summarization system with support for multiple summary types, iterative refinement, and enhanced API patterns.
+
+### ✨ Features & Improvements
+
+-   **Multi-Type Summarization**: New `SummaryType` enum supports distinct summary types:
+    -   `MACHINE`: Comprehensive summaries optimized for LLM processing
+    -   `PRETTY`: Concise summaries optimized for human reading
+-   **Iterative Refinement**: Summaries can now be improved through multiple iterations with automatic quality grading via judge agents
+-   **Split Workflow Architecture**: The monolithic summarizer workflow has been split into:
+    -   `TextSummarizerOneTypeWorkflow`: Generates a single summary type
+    -   `TextSummarizerAllWorkflow`: Generates all summary types in parallel
+-   **Enhanced API Endpoints**: New endpoints support both synchronous (wait for result) and asynchronous (returns workflow_id) patterns
+-   **Generic Status Endpoint**: New `/api/workflows/status/{workflow_id}` endpoint works for any workflow type
+-   **Model Separation**: Clear distinction between internal workflow models and external API responses
+
+### 💥 Breaking Changes
+
+-   **Workflow Renames**: `TextSummarizerWorkflow` split into `TextSummarizerOneTypeWorkflow` and `TextSummarizerAllWorkflow`
+-   **Model Updates**: `SummaryResult` replaced with `InternalSummaryResult`, `InternalSummariesAllResult`, and `SummariesResult`
+-   **Activity Renames**: `run_summarizer_activity` renamed to `run_summarizer_one_type_activity`
+
+### 🔄 Migration Notes
+
+See the [What's New: v0.12.0](whatsnew/2025-10-28-updates.md) guide for detailed migration instructions and integration patterns.
+
 ## Version 0.9.0
 
 This release focuses on improved clarity and consistency in the codebase, with significant renames to reduce confusion about workflow vs. agent inputs.

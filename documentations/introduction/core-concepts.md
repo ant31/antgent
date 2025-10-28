@@ -21,8 +21,18 @@ Key characteristics of antgent workflows:
 -   **Durability**: They are fault-tolerant and can recover from process failures.
 -   **Statefulness**: Temporal automatically persists the state of a workflow, so it can resume exactly where it left off, even after long delays.
 -   **Scalability**: Workflows can be distributed across multiple workers to handle high loads.
+-   **Composability**: Workflows can call other workflows or execute activities in sequence or parallel.
 
 A workflow might define a sequence of agent calls, parallel executions, or conditional logic based on agent outputs.
+
+**Example Workflow Patterns:**
+
+- **Sequential Processing**: Run agents one after another, passing outputs as inputs
+- **Parallel Processing**: Execute multiple agents simultaneously (e.g., generating multiple summary types)
+- **Iterative Refinement**: Run an agent multiple times with feedback to improve results
+- **Conditional Logic**: Choose different execution paths based on agent outputs or external conditions
+
+For example, the `TextSummarizerAllWorkflow` demonstrates parallel processing by generating machine-optimized and human-readable summaries simultaneously, while the `TextSummarizerOneTypeWorkflow` shows how to implement iterative refinement with quality grading.
 
 ### Models
 
