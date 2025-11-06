@@ -6,7 +6,10 @@ from typing import Any, TypeVar
 from pydantic import BaseModel, Field
 from temporalio import activity, workflow
 
+from datetime import timedelta
+
 from antgent.aliases import Aliases, AliasResolver
+from antgent.config import config
 from antgent.models.agent import AgentConfig, AgentInput, AgentWorkflowOutput, DynamicAgentConfig
 from antgent.models.visibility import Visibility, WorkflowInfo, WorkflowProgress, WorkflowStepStatus
 
@@ -32,6 +35,12 @@ async def heartbeat_every(delay: int = 30):
         heartbeat_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await heartbeat_task
+
+
+@activity.defn
+async def get_agent_configs() -> dict[str, AgentConfig]:
+    """Activity to load agent configurations."""
+    return config().agents
 
 
 @activity.defn
@@ -84,10 +93,6 @@ class BaseWorkflowInput[TInput](WorkflowInput[TInput]):
 class BaseWorkflow[TInput, TResult]:
     """A base class for Temporal workflows to standardize progress tracking."""
 
-    # This is a class-level attribute that MUST be set by the worker before starting.
-    # It is treated as a read-only template.
-    _AGENTSCONF_TEMPLATE: dict[str, AgentConfig] = {}
-
     def __init__(self):
         self.status_timeline: dict[str, WorkflowStepStatus] = {}
         self.input_ctx: TInput | None = None
@@ -95,9 +100,9 @@ class BaseWorkflow[TInput, TResult]:
         self.data: WorkflowInput[TInput] | None = None
         self.alias_resolver: AliasResolver = Aliases
         # This will hold the isolated configuration for this specific workflow run.
-        self.agentsconf: dict[str, AgentConfig] | None = None
+        self.agentsconf: dict[str, AgentConfig] = {}
 
-    def _init_run(self, data: WorkflowInput[TInput]) -> None:
+    async def _init_run(self, data: WorkflowInput[TInput]) -> None:
         """Initializes the workflow run with the provided input data."""
         self.data = data
         self.input_ctx = data.agent_input.context
@@ -108,35 +113,30 @@ class BaseWorkflow[TInput, TResult]:
             run_id=workflow.info().run_id,
         )
 
-        # Create an isolated copy of the agent configuration for this specific workflow run.
-        # This prevents any side-effects between workflow executions.
+        # Load base agent configuration via an activity to ensure determinism
+        base_agents_conf = await workflow.execute_activity(
+            get_agent_configs,
+            start_to_close_timeout=timedelta(seconds=10),
+        )
+        self.agentsconf = {k: v.model_copy(deep=True) for k, v in base_agents_conf.items()}
+
+        # Apply dynamic configuration if provided
         if data.agent_config is not None:
-            # If dynamic overrides are provided, apply them on top of a fresh copy of the template.
-            self.agentsconf = self._apply_dynamic_config(data.agent_config)
-        else:
-            # Otherwise, just create a deep copy of the template for this run.
-            self.agentsconf = {k: v.model_copy(deep=True) for k, v in self.__class__._AGENTSCONF_TEMPLATE.items()}
+            self._apply_dynamic_config(data.agent_config)
 
         self.data.visibility.steps.start_time = workflow.now()
         self._update_status("Workflow Start", WorkflowStepStatus.RUNNING)
 
-    def _apply_dynamic_config(self, dynamic_config: DynamicAgentConfig) -> dict[str, AgentConfig]:
+    def _apply_dynamic_config(self, dynamic_config: DynamicAgentConfig) -> None:
         """
-        Applies dynamic configuration overrides for this workflow run.
-
-        This method creates a fresh, isolated configuration by applying dynamic
-        overrides on top of the base configuration template.
+        Applies dynamic configuration overrides to the current workflow run's
+        agent configuration.
 
         Precedence:
         1. agent_config.agents[name] (most specific)
         2. agent_config.model (global override)
-        3. self._AGENTSCONF_TEMPLATE (base config)
+        3. self.agentsconf (base config loaded via activity)
         """
-        # Use instance-level config if available (for tests), otherwise class template.
-        base_config = self.agentsconf if self.agentsconf is not None else self.__class__._AGENTSCONF_TEMPLATE
-        # Start with a deep copy of the base configuration to ensure isolation
-        result_config = {k: v.model_copy(deep=True) for k, v in base_config.items()}
-
         # Merge aliases if provided, creating a temporary resolver for this run
         if dynamic_config.aliases:
             # Start with a copy of global aliases
@@ -147,24 +147,22 @@ class BaseWorkflow[TInput, TResult]:
 
         # Apply global model override to all agents
         if dynamic_config.model:
-            for _agent_name, agent_config in result_config.items():
+            for agent_config in self.agentsconf.values():
                 agent_config.model = dynamic_config.model
 
         # Apply per-agent overrides (most specific)
         for agent_name, model_info in dynamic_config.agents.items():
-            if agent_name not in result_config:
+            if agent_name not in self.agentsconf:
                 # For new agents, create a full AgentConfig from ModelInfo
-                result_config[agent_name] = AgentConfig(**model_info.model_dump(), name=agent_name)
+                self.agentsconf[agent_name] = AgentConfig(**model_info.model_dump(), name=agent_name)
             else:
                 # For existing agents, only override the model as per tests
-                result_config[agent_name].model = model_info.model
-
-        return result_config
+                self.agentsconf[agent_name].model = model_info.model
 
     @workflow.run
     async def run(self, data: WorkflowInput[TInput]) -> AgentWorkflowOutput[TResult]:
         """Runs the workflow with the provided input data."""
-        self._init_run(data)
+        await self._init_run(data)
         raise NotImplementedError("Subclasses must implement the run method.")
 
     def _update_status(self, step: str, status: WorkflowStepStatus) -> None:

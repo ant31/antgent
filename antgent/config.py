@@ -101,6 +101,7 @@ class TemporalCustomConfigSchema(TemporalConfigSchema):
                     "antgent.temporal.activities:echo",
                     "antgent.temporal.activities:aecho",
                     "antgent.workflows.summarizer:run_summarizer_one_type_activity",
+                    "antgent.workflows.base:get_agent_configs",
                 ],
             ),
             WorkerConfigSchema(

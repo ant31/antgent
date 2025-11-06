@@ -44,7 +44,7 @@ class TextSummarizerOneTypeWorkflow(BaseWorkflow[SummaryInput, InternalSummaryRe
 
     @workflow.run
     async def run(self, data: WorkflowInput[SummaryInput]) -> AgentWorkflowOutput[InternalSummaryResult]:
-        self._init_run(data)
+        await self._init_run(data)
         ctx = data.agent_input.context
         self._update_status("Input Processing", WorkflowStepStatus.COMPLETED)
 
@@ -73,7 +73,7 @@ class TextSummarizerAllWorkflow(BaseWorkflow[SummaryInput, InternalSummariesAllR
 
     @workflow.run
     async def run(self, data: WorkflowInput[SummaryInput]) -> AgentWorkflowOutput[InternalSummariesAllResult]:
-        self._init_run(data)
+        await self._init_run(data)
         ctx = data.agent_input.context
         self._update_status("Input Processing", WorkflowStepStatus.COMPLETED)
         self._update_status("Summarizing Text (Multi)", WorkflowStepStatus.RUNNING)
