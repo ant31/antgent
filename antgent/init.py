@@ -80,7 +80,9 @@ def init_logfire(config: LogfireConfigSchema, mode: Literal["server", "worker"] 
     if not extra:
         extra = {}
     if config.send_to_logfire and config.token:
-        logfire.configure(token=config.token, environment=extra.get("env", "dev"), send_to_logfire=config.send_to_logfire)
+        logfire.configure(
+            token=config.token, environment=extra.get("env", "dev"), send_to_logfire=config.send_to_logfire
+        )
         logfire.instrument_openai_agents()
         if mode == "server" and extra is not None and extra.get("app"):
             app = extra["app"]

@@ -35,8 +35,6 @@ async def heartbeat_every(delay: int = 30):
             await heartbeat_task
 
 
-
-
 @activity.defn
 async def demo_activity_with_heartbeat() -> int:
     """Activity to run the reply grading workflow."""
