@@ -132,8 +132,10 @@ class BaseWorkflow[TInput, TResult]:
         2. agent_config.model (global override)
         3. self._AGENTSCONF_TEMPLATE (base config)
         """
+        # Use instance-level config if available (for tests), otherwise class template.
+        base_config = self.agentsconf if self.agentsconf is not None else self.__class__._AGENTSCONF_TEMPLATE
         # Start with a deep copy of the base configuration to ensure isolation
-        result_config = {k: v.model_copy(deep=True) for k, v in self.__class__._AGENTSCONF_TEMPLATE.items()}
+        result_config = {k: v.model_copy(deep=True) for k, v in base_config.items()}
 
         # Merge aliases if provided, creating a temporary resolver for this run
         if dynamic_config.aliases:
@@ -148,13 +150,14 @@ class BaseWorkflow[TInput, TResult]:
             for _agent_name, agent_config in result_config.items():
                 agent_config.model = dynamic_config.model
 
-        # Apply per-agent overrides (most specific) - ONLY model name
+        # Apply per-agent overrides (most specific)
         for agent_name, model_info in dynamic_config.agents.items():
             if agent_name not in result_config:
-                result_config[agent_name] = AgentConfig(name=agent_name)
-
-            # Update ONLY the model field
-            result_config[agent_name].model = model_info.model
+                # For new agents, create a full AgentConfig from ModelInfo
+                result_config[agent_name] = AgentConfig(**model_info.model_dump(), name=agent_name)
+            else:
+                # For existing agents, only override the model as per tests
+                result_config[agent_name].model = model_info.model
 
         return result_config
 
