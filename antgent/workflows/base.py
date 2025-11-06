@@ -85,8 +85,9 @@ class BaseWorkflowInput[TInput](WorkflowInput[TInput]):
 class BaseWorkflow[TInput, TResult]:
     """A base class for Temporal workflows to standardize progress tracking."""
 
+    agentsconf = config().agents
+
     def __init__(self):
-        self.agentsconf = config().agents
         self.status_timeline: dict[str, WorkflowStepStatus] = {}
         self.input_ctx: TInput | None = None
         self.result: AgentWorkflowOutput[TResult] | None = None
@@ -104,9 +105,12 @@ class BaseWorkflow[TInput, TResult]:
             run_id=workflow.info().run_id,
         )
 
-        # Apply dynamic configuration if provided
+        # Apply dynamic configuration if provided, ensuring a deep copy for isolation
         if data.agent_config is not None:
             self.agentsconf = self._apply_dynamic_config(data.agent_config)
+        else:
+            # Create a deep copy for this run to prevent modifying class attribute
+            self.agentsconf = {k: v.model_copy(deep=True) for k, v in self.agentsconf.items()}
 
         self.data.visibility.steps.start_time = workflow.now()
         self._update_status("Workflow Start", WorkflowStepStatus.RUNNING)
@@ -120,8 +124,8 @@ class BaseWorkflow[TInput, TResult]:
         2. agent_config.model (global override)
         3. self.agentsconf (default from config)
         """
-        # Start with existing configuration
-        result_config = dict(self.agentsconf)
+        # Start with a deep copy of the base configuration to ensure isolation
+        result_config = {k: v.model_copy(deep=True) for k, v in self.agentsconf.items()}
 
         # Merge aliases if provided, creating a temporary resolver for this run
         if dynamic_config.aliases:
