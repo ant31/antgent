@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 from temporalio import activity, workflow
 
 from antgent.aliases import Aliases, AliasResolver
-from antgent.config import config
 from antgent.models.agent import AgentConfig, AgentInput, AgentWorkflowOutput, DynamicAgentConfig
 from antgent.models.visibility import Visibility, WorkflowInfo, WorkflowProgress, WorkflowStepStatus
 
@@ -36,10 +35,6 @@ async def heartbeat_every(delay: int = 30):
             await heartbeat_task
 
 
-@activity.defn
-async def get_agent_configs() -> dict[str, AgentConfig]:
-    """Activity to load agent configurations."""
-    return config().agents
 
 
 @activity.defn
@@ -114,7 +109,7 @@ class BaseWorkflow[TInput, TResult]:
 
         # Load base agent configuration via an activity to ensure determinism
         base_agents_conf = await workflow.execute_activity(
-            get_agent_configs,
+            "get_agent_configs",
             start_to_close_timeout=timedelta(seconds=10),
         )
         self.agentsconf = {k: v.model_copy(deep=True) for k, v in base_agents_conf.items()}

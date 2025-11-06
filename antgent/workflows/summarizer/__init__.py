@@ -1,11 +1,4 @@
-from .text import (
-    TextSummarizerAllWorkflow,
-    TextSummarizerOneTypeWorkflow,
-    run_summarizer_one_type_activity,
-)
-
-__all__ = [
-    "TextSummarizerAllWorkflow",
-    "TextSummarizerOneTypeWorkflow",
-    "run_summarizer_one_type_activity",
-]
+# This file is intentionally left empty to ensure that `antgent` can be safely
+# imported within a Temporal workflow sandbox.
+#
+# Please import workflows and activities directly from their respective modules.

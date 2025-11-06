@@ -1,4 +1,6 @@
-from .client import tclient
-from .queue_manager import get_workflow_queue
-
-__all__ = ["get_workflow_queue", "tclient"]
+# This file is intentionally left empty to ensure that `antgent` can be safely
+# imported within a Temporal workflow sandbox. Client and queue management
+# logic is non-deterministic.
+#
+# Please import directly from the modules, e.g.:
+# from antgent.temporal.client import tclient

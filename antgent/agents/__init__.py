@@ -1,6 +1,6 @@
-from .base import BaseAgent
-from .summarizer.summary import SummaryAgent
-from .summarizer.summary_judge import SummaryJudgeAgent
-from .summarizer.summary_pretty import SummaryPrettyAgent, SummaryPrettyJudgeAgent
-
-__all__ = ["BaseAgent", "SummaryAgent", "SummaryJudgeAgent", "SummaryPrettyAgent", "SummaryPrettyJudgeAgent"]
+# This file is intentionally left empty to ensure that `antgent` can be safely
+# imported within a Temporal workflow sandbox. Eagerly importing agent
+# implementations here would pull in non-deterministic dependencies like `httpx`.
+#
+# Please import agents directly from their respective modules, e.g.:
+# from antgent.agents.base import BaseAgent
