@@ -10,13 +10,13 @@ with workflow.unsafe.imports_passed_through():
     from temporalio.common import RetryPolicy
 
     from antgent.agents.summarizer.logic import summarize_one_type
-    from antgent.config import config
     from antgent.agents.summarizer.models import (
         InternalSummariesAllResult,
         InternalSummaryResult,
         SummaryInput,
         SummaryType,
     )
+    from antgent.config import config
     from antgent.models.agent import AgentWorkflowOutput
     from antgent.models.visibility import WorkflowStepStatus
     from antgent.workflows.base import BaseWorkflow, WorkflowInput, heartbeat_every
