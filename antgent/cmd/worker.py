@@ -105,6 +105,11 @@ def looper_wrapper(  # pylint: disable=too-many-arguments
     _config = config(str(config_path) if config_path else None)
     init(_config.conf, mode="worker")
 
+    # Inject agent config into BaseWorkflow
+    from antgent.workflows.base import BaseWorkflow  # noqa: PLC0415
+
+    BaseWorkflow._AGENTSCONF_TEMPLATE = _config.agents
+
     # Call the original looper main function with all arguments from the context
     looper_cmd.main(
         ctx,

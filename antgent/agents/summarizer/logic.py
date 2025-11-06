@@ -17,14 +17,13 @@ from antgent.agents.summarizer.summary_pretty import (
     SummaryPrettyAgent,
     SummaryPrettyJudgeAgent,
 )
-from antgent.config import config
+from antgent.models.agent import AgentConfig
 
 logger = logging.getLogger(__name__)
 
 
-async def summarize_one_type(ctx: SummaryInput) -> InternalSummaryResult:
+async def summarize_one_type(ctx: SummaryInput, agentsconf: dict[str, AgentConfig]) -> InternalSummaryResult:
     """Helper function to run one type of summarization logic."""
-    agentsconf = config().agents
     if ctx.summary_type == SummaryType.PRETTY:
         summarize_agent = SummaryPrettyAgent(conf=agentsconf)
         judge_agent = SummaryPrettyJudgeAgent(conf=agentsconf)

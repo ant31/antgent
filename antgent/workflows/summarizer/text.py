@@ -10,6 +10,7 @@ with workflow.unsafe.imports_passed_through():
     from temporalio.common import RetryPolicy
 
     from antgent.agents.summarizer.logic import summarize_one_type
+    from antgent.config import config
     from antgent.agents.summarizer.models import (
         InternalSummariesAllResult,
         InternalSummaryResult,
@@ -34,7 +35,7 @@ async def run_summarizer_one_type_activity(ctx: SummaryInput) -> InternalSummary
             metadata={},
             group_id=group_id,
         ):
-            return await summarize_one_type(ctx)
+            return await summarize_one_type(ctx, agentsconf=config().agents)
 
 
 @workflow.defn

@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 from temporalio import activity, workflow
 
 from antgent.aliases import Aliases, AliasResolver
-from antgent.config import config
 from antgent.models.agent import AgentConfig, AgentInput, AgentWorkflowOutput, DynamicAgentConfig
 from antgent.models.visibility import Visibility, WorkflowInfo, WorkflowProgress, WorkflowStepStatus
 
@@ -85,9 +84,9 @@ class BaseWorkflowInput[TInput](WorkflowInput[TInput]):
 class BaseWorkflow[TInput, TResult]:
     """A base class for Temporal workflows to standardize progress tracking."""
 
-    # This is a class-level attribute loaded once when the worker starts, outside
-    # of the sandboxed workflow environment. It is treated as a read-only template.
-    _AGENTSCONF_TEMPLATE = config().agents
+    # This is a class-level attribute that MUST be set by the worker before starting.
+    # It is treated as a read-only template.
+    _AGENTSCONF_TEMPLATE: dict[str, AgentConfig] = {}
 
     def __init__(self):
         self.status_timeline: dict[str, WorkflowStepStatus] = {}
