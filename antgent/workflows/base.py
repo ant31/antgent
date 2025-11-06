@@ -121,21 +121,25 @@ class BaseWorkflow[TInput, TResult]:
 
         # Apply dynamic configuration if provided
         if data.agent_config is not None:
-            self._apply_dynamic_config(data.agent_config)
+            self.agentsconf = self._apply_dynamic_config(data.agent_config)
 
         self.data.visibility.steps.start_time = workflow.now()
         self._update_status("Workflow Start", WorkflowStepStatus.RUNNING)
 
-    def _apply_dynamic_config(self, dynamic_config: DynamicAgentConfig) -> None:
+    def _apply_dynamic_config(self, dynamic_config: DynamicAgentConfig) -> dict[str, AgentConfig]:
         """
-        Applies dynamic configuration overrides to the current workflow run's
-        agent configuration.
+        Applies dynamic configuration overrides and returns a new, isolated
+        agent configuration dictionary. This method does NOT modify the instance's
+        'agentsconf' attribute.
 
         Precedence:
         1. agent_config.agents[name] (most specific)
         2. agent_config.model (global override)
         3. self.agentsconf (base config loaded via activity)
         """
+        # Start with a deep copy of the current config to ensure isolation
+        result_config = {k: v.model_copy(deep=True) for k, v in self.agentsconf.items()}
+
         # Merge aliases if provided, creating a temporary resolver for this run
         if dynamic_config.aliases:
             # Start with a copy of global aliases
@@ -146,17 +150,19 @@ class BaseWorkflow[TInput, TResult]:
 
         # Apply global model override to all agents
         if dynamic_config.model:
-            for agent_config in self.agentsconf.values():
+            for agent_config in result_config.values():
                 agent_config.model = dynamic_config.model
 
         # Apply per-agent overrides (most specific)
         for agent_name, model_info in dynamic_config.agents.items():
-            if agent_name not in self.agentsconf:
+            if agent_name not in result_config:
                 # For new agents, create a full AgentConfig from ModelInfo
-                self.agentsconf[agent_name] = AgentConfig(**model_info.model_dump(), name=agent_name)
+                result_config[agent_name] = AgentConfig(**model_info.model_dump(), name=agent_name)
             else:
                 # For existing agents, only override the model as per tests
-                self.agentsconf[agent_name].model = model_info.model
+                result_config[agent_name].model = model_info.model
+
+        return result_config
 
     @workflow.run
     async def run(self, data: WorkflowInput[TInput]) -> AgentWorkflowOutput[TResult]:
