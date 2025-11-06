@@ -2,7 +2,6 @@ import logging
 from typing import TYPE_CHECKING, cast
 
 from agents import Runner, RunResult, custom_span
-from litellm.utils import get_max_tokens, token_counter
 
 from antgent.models.agent import PrepareRun, TLLMInput
 
@@ -73,11 +72,15 @@ class AgentRunnerMixin[TContext, TOutput]:
         return cast(TOutput, res.final_output)
 
     def count_tokens(self: "BaseAgent[TContext, TOutput]", content) -> int:
+        from litellm.utils import token_counter  # noqa: PLC0415
+
         return token_counter(self.model, messages=content)
 
     @property
     def max_tokens(self: "BaseAgent[TContext, TOutput]") -> int:
         if self._max_tokens is None:
+            from litellm.utils import get_max_tokens  # noqa: PLC0415
+
             maxtokens = get_max_tokens(self.model)
             if maxtokens is None:
                 maxtokens = 0
