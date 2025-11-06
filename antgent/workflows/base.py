@@ -85,7 +85,9 @@ class BaseWorkflowInput[TInput](WorkflowInput[TInput]):
 class BaseWorkflow[TInput, TResult]:
     """A base class for Temporal workflows to standardize progress tracking."""
 
-    agentsconf = config().agents
+    # This is a class-level attribute loaded once when the worker starts, outside
+    # of the sandboxed workflow environment. It is treated as a read-only template.
+    _AGENTSCONF_TEMPLATE = config().agents
 
     def __init__(self):
         self.status_timeline: dict[str, WorkflowStepStatus] = {}
@@ -93,6 +95,8 @@ class BaseWorkflow[TInput, TResult]:
         self.result: AgentWorkflowOutput[TResult] | None = None
         self.data: WorkflowInput[TInput] | None = None
         self.alias_resolver: AliasResolver = Aliases
+        # This will hold the isolated configuration for this specific workflow run.
+        self.agentsconf: dict[str, AgentConfig] | None = None
 
     def _init_run(self, data: WorkflowInput[TInput]) -> None:
         """Initializes the workflow run with the provided input data."""
@@ -105,12 +109,14 @@ class BaseWorkflow[TInput, TResult]:
             run_id=workflow.info().run_id,
         )
 
-        # Apply dynamic configuration if provided, ensuring a deep copy for isolation
+        # Create an isolated copy of the agent configuration for this specific workflow run.
+        # This prevents any side-effects between workflow executions.
         if data.agent_config is not None:
+            # If dynamic overrides are provided, apply them on top of a fresh copy of the template.
             self.agentsconf = self._apply_dynamic_config(data.agent_config)
         else:
-            # Create a deep copy for this run to prevent modifying class attribute
-            self.agentsconf = {k: v.model_copy(deep=True) for k, v in self.agentsconf.items()}
+            # Otherwise, just create a deep copy of the template for this run.
+            self.agentsconf = {k: v.model_copy(deep=True) for k, v in self.__class__._AGENTSCONF_TEMPLATE.items()}
 
         self.data.visibility.steps.start_time = workflow.now()
         self._update_status("Workflow Start", WorkflowStepStatus.RUNNING)
@@ -119,13 +125,16 @@ class BaseWorkflow[TInput, TResult]:
         """
         Applies dynamic configuration overrides for this workflow run.
 
+        This method creates a fresh, isolated configuration by applying dynamic
+        overrides on top of the base configuration template.
+
         Precedence:
         1. agent_config.agents[name] (most specific)
         2. agent_config.model (global override)
-        3. self.agentsconf (default from config)
+        3. self._AGENTSCONF_TEMPLATE (base config)
         """
         # Start with a deep copy of the base configuration to ensure isolation
-        result_config = {k: v.model_copy(deep=True) for k, v in self.agentsconf.items()}
+        result_config = {k: v.model_copy(deep=True) for k, v in self.__class__._AGENTSCONF_TEMPLATE.items()}
 
         # Merge aliases if provided, creating a temporary resolver for this run
         if dynamic_config.aliases:
