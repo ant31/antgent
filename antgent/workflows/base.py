@@ -113,9 +113,9 @@ class BaseWorkflow[TInput, TResult]:
         for k, v in base_agents_conf.items():
             if isinstance(v, AgentConfig):
                 self.agentsconf[k] = v.model_copy(deep=True)
-            elif isinstance(v, dict):                
+            elif isinstance(v, dict):
                 self.agentsconf[k] = AgentConfig(**v)
-                
+
         # Apply dynamic configuration if provided
         if data.agent_config is not None:
             self.agentsconf = self._apply_dynamic_config(data.agent_config)
