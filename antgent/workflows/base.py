@@ -110,8 +110,12 @@ class BaseWorkflow[TInput, TResult]:
             "get_agent_configs",
             start_to_close_timeout=timedelta(seconds=10),
         )
-        self.agentsconf = {k: v.model_copy(deep=True) for k, v in base_agents_conf.items()}
-
+        for k, v in base_agents_conf.items():
+            if isinstance(v, AgentConfig):
+                self.agentsconf[k] = v.model_copy(deep=True)
+            elif isinstance(v, dict):                
+                self.agentsconf[k] = AgentConfig(**v)
+                
         # Apply dynamic configuration if provided
         if data.agent_config is not None:
             self.agentsconf = self._apply_dynamic_config(data.agent_config)
