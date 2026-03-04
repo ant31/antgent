@@ -1,6 +1,6 @@
 [project]
 name = "antgent"
-version = "0.12.5"
+version = "0.12.7"
 description = ""
 authors = [{ name = "ant31", email = "2t.antoine@gmail.com" }]
 requires-python = ">=3.12,<4"
@@ -34,6 +34,8 @@ dependencies = [
     "fpdf2>=2.8.3",
     "typer>=0.16.0",
     "pydot>=4.0.1",
+    "langfuse>=3.14.5",
+    "openinference-instrumentation-openai-agents>=1.4.0",
 ]
 packages = [{ include = "antgent" }]
 
@@ -83,7 +85,7 @@ skip_gitignore = true
 testpaths = "tests/"
 
 [tool.bumpversion]
-current_version = "0.12.5"
+current_version = "0.12.7"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"

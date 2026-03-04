@@ -7,6 +7,8 @@ from typing import Any, Literal
 import litellm
 import logfire
 from agents import set_trace_processors, set_tracing_export_api_key
+from langfuse import get_client
+from openinference.instrumentation.openai_agents import OpenAIAgentsInstrumentor
 
 from antgent.agents.base import BaseAgent
 from antgent.aliases import Aliases
@@ -22,11 +24,18 @@ def init_envs_langfuse(config: LangfuseConfigSchema):
     os.environ["LANGFUSE_PUBLIC_KEY"] = os.environ.get("LANGFUSE_PUBLIC_KEY", config.public_key)
     os.environ["LANGFUSE_SECRET_KEY"] = os.environ.get("LANGFUSE_SECRET_KEY", config.secret_key)
     os.environ["LANGFUSE_HOST"] = os.environ.get("LANGFUSE_HOST", config.endpoint)
+    # Verify connection
+    langfuse = get_client()
+    if langfuse.auth_check():
+        logger.info("✅ Langfuse client is authenticated and ready!")
+    else:
+        logger.error("❌ Authentication failed. Please check your credentials and host.")
 
     # Build Basic Auth header.
     langfuse_auth = base64.b64encode(
         f"{os.environ.get('LANGFUSE_PUBLIC_KEY')}:{os.environ.get('LANGFUSE_SECRET_KEY')}".encode()
     ).decode()
+    OpenAIAgentsInstrumentor().instrument()
 
     # Configure OpenTelemetry endpoint & headers
     os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = f"{os.environ['LANGFUSE_HOST']}/api/public/otel"
