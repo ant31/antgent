@@ -18,12 +18,16 @@ from antgent.models.agent import LLMConfigSchema
 logger = logging.getLogger(__name__)
 
 
-def init_envs_langfuse(config: LangfuseConfigSchema):
+def init_envs_langfuse(config: LangfuseConfigSchema, mode: Literal["server", "worker"] = "server", extra=None):
     # Replace with your Langfuse keys.
-    logger.info("Setting up Langfuse environment variables: pk:%s", config.public_key)
+    if not extra:
+        extra = {}
+    logger.info("Setting up Langfuse environment variables: pk:%s env:%s", config.public_key, extra.get("env", "dev"))
     os.environ["LANGFUSE_PUBLIC_KEY"] = os.environ.get("LANGFUSE_PUBLIC_KEY", config.public_key)
     os.environ["LANGFUSE_SECRET_KEY"] = os.environ.get("LANGFUSE_SECRET_KEY", config.secret_key)
     os.environ["LANGFUSE_HOST"] = os.environ.get("LANGFUSE_HOST", config.endpoint)
+    os.environ["LANGFUSE_TRACING_ENVIRONMENT"] = extra.get("env", "dev")
+
     # Verify connection
     langfuse = get_client()
     if langfuse.auth_check():
@@ -115,5 +119,5 @@ def init(
     init_envs(config)
     set_trace_processors([])
     if config.traces.enabled:
-        init_envs_langfuse(config.traces.langfuse)
+        init_envs_langfuse(config.traces.langfuse, mode, extra)
         init_logfire(config.traces.logfire, mode, extra)

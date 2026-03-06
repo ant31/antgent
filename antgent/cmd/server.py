@@ -14,7 +14,7 @@ app = typer.Typer()
 logger = logging.getLogger("ant31box.info")
 
 
-class LogLevel(str, enum.Enum):
+class LogLevel(enum.StrEnum):
     CRITICAL = "critical"
     ERROR = "error"
     WARNING = "warning"
