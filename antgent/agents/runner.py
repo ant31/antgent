@@ -72,9 +72,9 @@ class AgentRunnerMixin[TContext, TOutput]:
         return cast(TOutput, res.final_output)
 
     def count_tokens(self: "BaseAgent[TContext, TOutput]", content) -> int:
-        from litellm.utils import token_counter  # noqa: PLC0415
+        from antgent.utils.token import estimate_tokens
 
-        return token_counter(self.model, messages=content)
+        return estimate_tokens(self.model, messages=content)
 
     @property
     def max_tokens(self: "BaseAgent[TContext, TOutput]") -> int:
