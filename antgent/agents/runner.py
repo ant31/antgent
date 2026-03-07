@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, cast
 from agents import Runner, RunResult, custom_span
 
 from antgent.models.agent import PrepareRun, TLLMInput
+from antgent.utils.token import estimate_tokens
 
 if TYPE_CHECKING:
     from antgent.agents.base import BaseAgent, TContext, TOutput
@@ -72,8 +73,6 @@ class AgentRunnerMixin[TContext, TOutput]:
         return cast(TOutput, res.final_output)
 
     def count_tokens(self: "BaseAgent[TContext, TOutput]", content) -> int:
-        from antgent.utils.token import estimate_tokens
-
         return estimate_tokens(self.model, messages=content)
 
     @property
