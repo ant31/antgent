@@ -41,9 +41,10 @@ def init_envs_langfuse(config: LangfuseConfigSchema, mode: Literal["server", "wo
     ).decode()
     OpenAIAgentsInstrumentor().instrument()
 
-    # Configure OpenTelemetry endpoint & headers
-    os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = f"{os.environ['LANGFUSE_HOST']}/api/public/otel"
-    os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {langfuse_auth}"
+    if config.export_otel:
+        # Configure OpenTelemetry endpoint & headers
+        os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = f"{os.environ['LANGFUSE_HOST']}/api/public/otel"
+        os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {langfuse_auth}"
 
 
 def set_env_llm(config: LLMConfigSchema | None, prefix: str | None):

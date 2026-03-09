@@ -68,7 +68,7 @@ class LangfuseConfigSchema(BaseConfig):
     public_key: str = Field(default="pk-lf-989f33ac-ad6d-418f-b115-590d7c8b1c95")
     secret_key: str = Field(default="sk-lf-154576f9-d2d2-48c6-84a1-122f03c0a777")
     endpoint: str = Field(default="https://cloud.langfuse.com")
-
+    export_otel: bool = Field(default=False)
 
 class LoggingCustomConfigSchema(LoggingConfigSchema):
     log_config: dict[str, Any] | str | None = Field(default_factory=lambda: LOGGING_CONFIG)
